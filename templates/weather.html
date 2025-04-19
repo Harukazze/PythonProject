@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSE Weather</title>
+    <link rel="stylesheet" href="static/weather.css">
+    <!--    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>-->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<div class='wrapper'>
+    <h1>Прогноз погоды в г. {{city}}</h1>
+    <h2>{{description}}</h2>
+    <div class="temperature">
+        <ul>
+            <li>Температура - {{temp_now}}&#176;С</li>
+            <li>Макс. температура - {{temp_max}}&#176;С</li>
+            <li>Мин. температура - {{temp_min}}&#176;С</li>
+            <li>Ощущается как - {{temp_feels_like}}&#176;С</li>
+        </ul>
+    </div>
+    <div class="otherData">
+        <ul>
+            <li>Время восхода Солнца- {{sunrise_time}} GTM+3</li>
+            <li>Время захода Солнца - {{sunset_time}} GTM+3</li>
+        </ul>
+    </div>
+    <div class='cityInput'>
+        <p><b>Введите название города:</b><br>
+        <form id="findCity" type="submit">
+            <input id="cityName" type="text" size="40">
+            <button id="findCityButton" type='submit'>Найти город</button>
+            <select id="citySelect" name="select" size="4" type='submit'>Выберите город из списка</select>
+            <p id="cityError">Введите название города!</p>
+        </form>
+    </div>
+    <script>
+        const citySelect = document.getElementById('citySelect');
+        document.getElementById('findCity').addEventListener('submit', function(event) {
+           event.preventDefault();
+           document.getElementById('citySelect').options.length = 0;
+           var cityName = document.getElementById("cityName").value
+           console.log(cityName);
+           $.ajax({
+                    url: '/find_city',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data:{'name':cityName},
+                    success: function(response) {
+                       if (response === "Введите название города"){
+                           const cityError = document.getElementById('cityError');
+                           cityError.style.display = 'block';
+                       }
+                       else{
+                           console.log(response);
+                           citySelect.style.display = 'block';
+                           cityError.style.display = 'none';
+                           var jsonLen = Object.keys(response).length;
+                           console.log(jsonLen);
+                           for(let i = 0; i < jsonLen; i++){
+                               var newOption = new Option(Object.keys(response)[i], `http://127.0.0.1:5000/?cityName=${response[Object.keys(response)[i]]['cityName']}&countryCode=${response[Object.keys(response)[i]]['countryCode']}`);
+                               citySelect.options.add(newOption);
+                           }
+                           }
+                    }
+            });
+       });
+        var select = document.getElementById("citySelect");
+        select.addEventListener("change",function(){
+            document.location.href = select.value;
+        });
+
+    </script>
+    <footer>
+        <p>&copy; 2025 HSE Weather. Все права защищены.</p>
+    </footer>
+
+</div>
+</body>
+</html>
