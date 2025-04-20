@@ -17,3 +17,33 @@ body {
 #cityError {
    display:none;
 }
+.wrapper{
+    display:flex;
+}
+.oneDayWeather{
+padding:10px;
+}
+.fiveDayWeather{
+padding:10px;
+margin-left: 15px;
+}
+
+ul {
+    list-style-type: none;
+}
+li{
+    display: flex;
+}
+.date{
+    width:90px;
+    padding:3px;
+    margin-right: 40px;
+}
+.temperatureDate{
+    width: 200px;
+    padding:3px;
+    margin-bottom:20px;
+}
+.description{
+    margin-left:auto;
+}

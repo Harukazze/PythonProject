@@ -10,23 +10,38 @@
 </head>
 <body>
 <div class='wrapper'>
-    <h1>Прогноз погоды в г. {{city}}</h1>
-    <h2>{{description}}</h2>
-    <div class="temperature">
+    <div class='oneDayWeather'>
+        <h1>Прогноз погоды в г. {{city}}</h1>
+        <h2>{{description}}</h2>
+        <div class="temperature">
+            <ul>
+                <li>Температура - {{temp_now}}&#176;С</li>
+                <li>Макс. температура - {{temp_max}}&#176;С</li>
+                <li>Мин. температура - {{temp_min}}&#176;С</li>
+                <li>Ощущается как - {{temp_feels_like}}&#176;С</li>
+            </ul>
+        </div>
+        <div class="otherData">
+            <ul>
+                <li>Время восхода Солнца- {{sunrise_time}} GTM+3</li>
+                <li>Время захода Солнца - {{sunset_time}} GTM+3</li>
+            </ul>
+        </div>
+    </div>
+    <div class="fiveDayWeather">
+        <h1>Прогноз погоды на 5 дней</h1>
         <ul>
-            <li>Температура - {{temp_now}}&#176;С</li>
-            <li>Макс. температура - {{temp_max}}&#176;С</li>
-            <li>Мин. температура - {{temp_min}}&#176;С</li>
-            <li>Ощущается как - {{temp_feels_like}}&#176;С</li>
+            {% for i in five_day_weather %}
+            <li>
+                <span class = 'date'> {{ i }} </span>
+                <div class = 'temperatureDate'>{{five_day_weather[i]['MaxTemp']}} / {{five_day_weather[i]['MinTemp']}} &#176;С</div>
+                <span class = 'description'> {{five_day_weather[i]['description']}}</span>
+            </li>
+            {% endfor %}
         </ul>
     </div>
-    <div class="otherData">
-        <ul>
-            <li>Время восхода Солнца- {{sunrise_time}} GTM+3</li>
-            <li>Время захода Солнца - {{sunset_time}} GTM+3</li>
-        </ul>
-    </div>
-    <div class='cityInput'>
+</div>
+<div class='cityInput'>
         <p><b>Введите название города:</b><br>
         <form id="findCity" type="submit">
             <input id="cityName" type="text" size="40">
@@ -35,7 +50,10 @@
             <p id="cityError">Введите название города!</p>
         </form>
     </div>
-    <script>
+<footer>
+    <p>&copy; 2025 HSE Weather. Все права защищены.</p>
+</footer>
+<script>
         const citySelect = document.getElementById('citySelect');
         document.getElementById('findCity').addEventListener('submit', function(event) {
            event.preventDefault();
@@ -49,6 +67,7 @@
                     data:{'name':cityName},
                     success: function(response) {
                        if (response === "Введите название города"){
+                            console.log(response);
                            const cityError = document.getElementById('cityError');
                            cityError.style.display = 'block';
                        }
@@ -72,10 +91,5 @@
         });
 
     </script>
-    <footer>
-        <p>&copy; 2025 HSE Weather. Все права защищены.</p>
-    </footer>
-
-</div>
 </body>
 </html>
