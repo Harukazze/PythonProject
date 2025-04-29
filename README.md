@@ -15,9 +15,9 @@
    2. Для MacOS/Linux `source venv/bin/activate`
 4. Установить необходимые зависимости командой `pip install -r requirements.txt`
 5. Создать **.env** файл по следующему шаблону
-   ````
-   SECRET_KEY = "Секретный ключ"
-   API_KEY = "YOUR_API_KEY"
-   ````
+````
+SECRET_KEY = "Секретный ключ"
+API_KEY = "YOUR_API_KEY"
+````
    
 [Получение API-ключа](https://openweathermap.org/api)
