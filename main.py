@@ -13,7 +13,7 @@ app.secret_key = os.getenv("SECRET_KEY")
 
 def getWeather(cityName, countryCode):
     weather_responce = requests.get(
-        f"https://api.openweathermap.org/data/2.5/weather?lang=ru&q={cityName},{countryCode}&appid={os.getenv("API_KEY")}&units=metric").json()
+        f"https://api.openweathermap.org/data/2.5/weather?lang=ru&q={cityName},{countryCode}&appid={os.getenv('API_KEY')}&units=metric").json()
     if 'message' in weather_responce:
         return 0
     name = weather_responce['name']
@@ -53,7 +53,7 @@ def weatherDataTransform(data, description):
 
 def fiveDaysWeather(cityName, countryCode):
     weather_responce = requests.get(
-        f"https://api.openweathermap.org/data/2.5/forecast?lang=ru&q={cityName},{countryCode}&appid={os.getenv("API_KEY")}&units=metric").json()
+        f"https://api.openweathermap.org/data/2.5/forecast?lang=ru&q={cityName},{countryCode}&appid={os.getenv('API_KEY')}&units=metric").json()
     if weather_responce['message'] != 0:
         return 0
     five_day_weather = {}
@@ -86,8 +86,8 @@ def index():
         weather_data = getWeather('Токио', 'JP')
         five_day_weather = fiveDaysWeather('Токио', 'JP')
     else:
-        response = requests.get(
-            f"http://api.openweathermap.org/geo/1.0/direct?lang=ru&q={arguments['cityName']},{arguments['countryCode']}&limit=1&appid={os.getenv("API_KEY")}").json()
+        # response = requests.get(
+        #     f"http://api.openweathermap.org/geo/1.0/direct?lang=ru&q={arguments['cityName']},{arguments['countryCode']}&limit=1&appid={os.getenv("API_KEY")}").json()
         weather_data = getWeather(arguments['cityName'], arguments['countryCode'])
         five_day_weather = fiveDaysWeather(arguments['cityName'], arguments['countryCode'])
         print(five_day_weather)
@@ -114,7 +114,7 @@ def findCity():
         return "Введите название города"
 
     responce = requests.get(
-        f"http://api.openweathermap.org/geo/1.0/direct?lang=ru&q={data}&limit=4&appid={os.getenv("API_KEY")}").json()
+        f"http://api.openweathermap.org/geo/1.0/direct?lang=ru&q={data}&limit=4&appid={os.getenv('API_KEY')}").json()
 
     for i in responce:
         if 'local_names' in i:
