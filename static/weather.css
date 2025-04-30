@@ -142,35 +142,63 @@ h2 {
 }
 
 /* Поиск города */
-.city-search {
-    margin-bottom: 20px;
+#findCity {
+    margin-top: 15px;
 }
 
-.search-box {
-    display: flex;
-    gap: 10px;
-}
-
-.search-box input {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+#findCity b {
+    display: block;
+    margin-bottom: 10px;
     font-size: 16px;
+    color: #333;
 }
 
-.search-box button {
-    padding: 10px 20px;
+#cityName {
+    padding: 12px 15px;
+    width: calc(300px);
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+    margin-right: 10px;
+    transition: border-color 0.3s;
+}
+
+#cityName:focus {
+    border-color: #3498db;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+#findCityButton {
+    padding: 12px 20px;
     background-color: #3498db;
     color: white;
     border: none;
-    border-radius: 4px;
-    cursor: pointer;
+    border-radius: 6px;
     font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
 
-.search-box button:hover {
+#findCityButton:hover {
     background-color: #2980b9;
+}
+
+#citySelect {
+    margin-top: 15px;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+    background-color: white;
+}
+
+#cityError {
+    color: #e74c3c;
+    margin-top: 10px;
+    font-size: 14px;
+    display: none;
 }
 
 /* НИЖНИЙ КОЛОНТИТУЛ */
