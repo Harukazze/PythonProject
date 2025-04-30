@@ -10,46 +10,68 @@
 </head>
 <body>
 <div class='wrapper'>
-    <div class='oneDayWeather'>
+    <div class='weather-container'>
         <h1>Прогноз погоды в г. {{city}}</h1>
-        <h2>{{description}}</h2>
-        <div class="temperature">
-            <ul>
-                <li>Температура - {{temp_now}}&#176;С</li>
-                <li>Макс. температура - {{temp_max}}&#176;С</li>
-                <li>Мин. температура - {{temp_min}}&#176;С</li>
-                <li>Ощущается как - {{temp_feels_like}}&#176;С</li>
-            </ul>
+        <div class="current-weather">
+            <h2>{{description}}</h2>
+            <div class="weather-details">
+                <table>
+                    <tr>
+                        <td>Температура</td>
+                        <td>{{temp_now}}&#176;С</td>
+                    </tr>
+                    <tr>
+                        <td>Ощущается как</td>
+                        <td>{{temp_feels_like}}&#176;С</td>
+                    </tr>
+                    <tr>
+                        <td>Макс. температура</td>
+                        <td>{{temp_max}}&#176;С</td>
+                    </tr>
+                    <tr>
+                        <td>Мин. температура</td>
+                        <td>{{temp_min}}&#176;С</td>
+                    </tr>
+                    <tr>
+                        <td>Восход солнца</td>
+                        <td>{{sunrise_time}} GTM+3</td>
+                    </tr>
+                    <tr>
+                        <td>Заход солнца</td>
+                        <td>{{sunset_time}} GTM+3</td>
+                    </tr>
+                </table>
+            </div>
+            </div>
         </div>
-        <div class="otherData">
-            <ul>
-                <li>Время восхода Солнца- {{sunrise_time}} GTM+3</li>
-                <li>Время захода Солнца - {{sunset_time}} GTM+3</li>
-            </ul>
-        </div>
-    </div>
+               <div class="divider"></div>
+  <div class='weather-container'>
     <div class="fiveDayWeather">
-        <h1>Прогноз погоды на 5 дней</h1>
-        <ul>
-            {% for i in five_day_weather %}
-            <li>
-                <span class = 'date'> {{ i }} </span>
-                <div class = 'temperatureDate'>{{five_day_weather[i]['MaxTemp']}} / {{five_day_weather[i]['MinTemp']}} &#176;С</div>
-                <span class = 'description'> {{five_day_weather[i]['description']}}</span>
-            </li>
-            {% endfor %}
-        </ul>
+    <h2>Прогноз погоды на 5 дней</h2>
+    <table class="forecast-table">
+        {% for i in five_day_weather %}
+        <tr>
+            <td>{{ i }}</td>
+            <td>{{ five_day_weather[i]['MaxTemp'] }} / {{ five_day_weather[i]['MinTemp'] }}°C   </td>
+            <td>{{ five_day_weather[i]['description'] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
     </div>
+
+    </div>
+    </div>
+
 </div>
-<div class='cityInput'>
-        <p><b>Введите название города:</b><br>
-        <form id="findCity" type="submit">
-            <input id="cityName" type="text" size="40">
-            <button id="findCityButton" type='submit'>Найти город</button>
-            <select id="citySelect" name="select" size="4" type='submit'>Выберите город из списка</select>
-            <p id="cityError">Введите название города!</p>
-        </form>
-    </div>
+   <div class="divider"></div>
+
+        <div class="city-search">
+            <h2>Введите название своего города:</h2>
+            <div class="search-box">
+                <input type="text" placeholder="Название города">
+                <button>Найти город</button>
+            </div>
+        </div>
 <footer>
     <p>&copy; 2025 HSE Weather. Все права защищены.</p>
 </footer>
