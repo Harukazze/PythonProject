@@ -72,9 +72,7 @@ def fiveDaysWeather(cityName, countryCode):
                 outputData.clear()
                 counter = 0
                 five_day_weather[time.strftime("%a, %b %d", time.localtime(i['dt']))] = transformedData
-    transformedData = weatherDataTransform(outputData, weather_responce['list'][-1]['weather'][0]['description'])
     outputData.clear()
-    five_day_weather[time.strftime("%a, %b %d", time.localtime(weather_responce['list'][-1]['dt']))] = transformedData
     return five_day_weather
 
 

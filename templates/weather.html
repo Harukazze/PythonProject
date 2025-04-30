@@ -64,14 +64,13 @@
 
 </div>
    <div class="divider"></div>
-
-        <div class="city-search">
-            <h2>Введите название своего города:</h2>
-            <div class="search-box">
-                <input type="text" placeholder="Название города">
-                <button>Найти город</button>
-            </div>
-        </div>
+        <p><b>Введите название города:</b><br>
+            <form id="findCity" type="submit">
+            <input id="cityName" type="text" size="40">
+            <button id="findCityButton" type='submit'>Найти город</button>
+            <select id="citySelect" name="select" size="4" type='submit'>Выберите город из списка</select>
+            <p id="cityError">Введите название города!</p>
+        </form>
 <footer>
     <p>&copy; 2025 HSE Weather. Все права защищены.</p>
 </footer>
