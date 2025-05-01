@@ -27,27 +27,25 @@ def getWeather(cityName, countryCode):
     return [description, temp_now, temp_max, temp_min, temp_feels_like, sunrise_time, sunset_time, name]
 
 
-def weatherDataTransform(data, description):
-    updatedData = {'MinTemp': 99999999, 'MaxTemp': -9999999, 'AvgTemp': 0, "AvgFeelsLike": 0, "AvgPressure": 0, "AvgHumidity": 0,"description": ""}
+def weatherDataTransform(data):
+    updatedData = {}
+    min_temp = 999999999
+    max_temp = -100000000
+    feels_like = 0
+    pressure = 0
+    humidity = 0
     for i in data:
-        if i['temp_min'] < updatedData['MinTemp']:
-            updatedData['MinTemp'] = i['temp_min']
-        if i['temp_max'] > updatedData['MaxTemp']:
-            updatedData['MaxTemp'] = i['temp_max']
-        updatedData['AvgTemp'] += i['temp']
-        updatedData['AvgFeelsLike'] += i['feels_like']
-        updatedData['AvgPressure'] += i['pressure']
-        updatedData['AvgHumidity'] += i['humidity']
-
-    updatedData['MinTemp'] = round(updatedData['MinTemp'], 2)
-    updatedData['MaxTemp'] = round(updatedData['MaxTemp'], 2)
-    updatedData['AvgTemp'] = round(updatedData['AvgTemp'] / len(data), 2)
-    updatedData['AvgFeelsLike'] = round(updatedData['AvgFeelsLike'] / len(data), 2)
-    updatedData['AvgPressure'] = round(updatedData['AvgPressure'] / len(data), 2)
-    updatedData['AvgHumidity'] = round(updatedData['AvgHumidity'] / len(data), 2)
-    updatedData['description'] = description
-    # print(data)
-    # print(updatedData)
+        for j in range(len(data[i])):
+            min_temp = min(min_temp, data[i][j]['main']['temp_min'])
+            max_temp = max(max_temp, data[i][j]['main']['temp_max'])
+            feels_like += data[i][j]['main']['feels_like']
+            pressure += data[i][j]['main']['pressure']
+            humidity += data[i][j]['main']['humidity']
+        feels_like = round(feels_like / len(data[i]), 2)
+        pressure = round(pressure / len(data[i]), 2)
+        humidity = round(humidity / len(data[i]), 2)
+        updatedData[i] = {"MinTemp": min_temp, "MaxTemp": max_temp, "AvgFeelsLike": feels_like, "AvgPressure": pressure,
+                          "AvgHumidity": humidity, "description": data[i][0]['weather'][0]['description']}
     return updatedData
 
 
@@ -57,40 +55,39 @@ def fiveDaysWeather(cityName, countryCode):
     if weather_responce['message'] != 0:
         return 0
     five_day_weather = {}
-    counter = 0
-    outputData = []
-    print(weather_responce)
     for i in weather_responce['list']:
-        if time.strftime("%d.%m.%Y", time.localtime(time.time())) != time.strftime("%d.%m.%Y", time.localtime(i['dt'])):
-            # print(time.strftime("%d.%m.%Y %H:%M:%S", time.localtime(i['dt'])))
-            print(i['main'])
-            outputData.append(i['main'])
-            counter += 1
-            if counter == 8:
-                # print("Отправка данных")
-                transformedData = weatherDataTransform(outputData, i['weather'][0]['description'])
-                outputData.clear()
-                counter = 0
-                five_day_weather[time.strftime("%a, %b %d", time.localtime(i['dt']))] = transformedData
-    transformedData = weatherDataTransform(outputData, weather_responce['list'][-1]['weather'][0]['description'])
-    outputData.clear()
-    five_day_weather[time.strftime("%a, %b %d", time.localtime(weather_responce['list'][-1]['dt']))] = transformedData
+        if time.strftime("%a, %b %d", time.localtime(i['dt'])) not in five_day_weather:
+            five_day_weather[time.strftime("%a, %b %d", time.localtime(i['dt']))] = [i]
+        else:
+            five_day_weather[time.strftime("%a, %b %d", time.localtime(i['dt']))].append(i)
+    five_day_weather = weatherDataTransform(five_day_weather)
     return five_day_weather
+
+
+def hourleForecast(cityName, countryCode):
+    labels = []
+    temp_data = []
+    hourly_forecast_response = requests.get(
+        f"https://api.openweathermap.org/data/2.5/forecast/?lang=ru&q={cityName},{countryCode}&appid={os.getenv('API_KEY')}&units=metric&cnt=9")
+    for i in range(len(hourly_forecast_response.json()['list'])):
+        labels.append(time.strftime("%a, %b %d %H:%M", time.localtime(hourly_forecast_response.json()['list'][i]['dt'])))
+        temp_data.append(hourly_forecast_response.json()['list'][i]['main']['temp'])
+    return [labels, temp_data]
 
 
 @app.route('/')
 def index():
     arguments = dict(request.args)
-    print(arguments)
     if len(arguments) == 0:
         weather_data = getWeather('Токио', 'JP')
         five_day_weather = fiveDaysWeather('Токио', 'JP')
+        hourly_forecast = hourleForecast('Токио', 'JP')
+        print(hourly_forecast[0])
     else:
-        # response = requests.get(
-        #     f"http://api.openweathermap.org/geo/1.0/direct?lang=ru&q={arguments['cityName']},{arguments['countryCode']}&limit=1&appid={os.getenv("API_KEY")}").json()
         weather_data = getWeather(arguments['cityName'], arguments['countryCode'])
         five_day_weather = fiveDaysWeather(arguments['cityName'], arguments['countryCode'])
-        print(five_day_weather)
+        hourly_forecast = hourleForecast(arguments['cityName'], arguments['countryCode'])
+        print(hourly_forecast)
         if weather_data == 0:
             return "Ошибка в получении погодных данных для выбранного города, убедитель в правильности выбранного города"
     return render_template('weather.html',
@@ -102,7 +99,9 @@ def index():
                            temp_feels_like=weather_data[4],
                            sunrise_time=weather_data[5],
                            sunset_time=weather_data[6],
-                           five_day_weather=five_day_weather)
+                           five_day_weather=five_day_weather,
+                           labels=hourly_forecast[0],
+                           temp_data=hourly_forecast[1])
 
 
 @app.route("/find_city", methods=["POST"])
