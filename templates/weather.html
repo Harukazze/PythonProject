@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HSE Weather</title>
     <link rel="stylesheet" href="static/weather.css">
-    <!--    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>-->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
@@ -42,75 +42,101 @@
                     </tr>
                 </table>
             </div>
-            </div>
         </div>
-               <div class="divider"></div>
-  <div class='weather-container'>
-    <div class="fiveDayWeather">
-    <h2>Прогноз погоды на 5 дней</h2>
-    <table class="forecast-table">
-        {% for i in five_day_weather %}
-        <tr>
-            <td>{{ i }}</td>
-            <td>{{ five_day_weather[i]['MaxTemp'] }} / {{ five_day_weather[i]['MinTemp'] }}°C   </td>
-            <td>{{ five_day_weather[i]['description'] }}</td>
-        </tr>
-        {% endfor %}
-    </table>
     </div>
-
+    <div class="divider"></div>
+    <div class='weather-container'>
+        <div class="fiveDayWeather">
+            <h2>Прогноз погоды на 5 дней</h2>
+            <table class="forecast-table">
+                {% for i in five_day_weather %}
+                <tr>
+                    <td>{{ i }}</td>
+                    <td>{{ five_day_weather[i]['MaxTemp'] }} / {{ five_day_weather[i]['MinTemp'] }}°C</td>
+                    <td>{{ five_day_weather[i]['description'] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
     </div>
+    <div class = "diagram">
+        <section id = "diag">
+            <h2>График погоды на 24 часа<h2>
+            <canvas id ="chart" width="400" height="400"></canvas>
+        </section>
     </div>
+</div>
 
 </div>
-   <div class="divider"></div>
-        <p><b>Введите название города:</b><br>
-            <form id="findCity" type="submit">
-            <input id="cityName" type="text" size="40">
-            <button id="findCityButton" type='submit'>Найти город</button>
-            <select id="citySelect" name="select" size="4" type='submit'>Выберите город из списка</select>
-            <p id="cityError">Введите название города!</p>
-        </form>
+<div class="divider"></div>
+<p><b>Введите название города:</b><br>
+<form id="findCity" type="submit">
+    <input id="cityName" type="text" size="40">
+    <button id="findCityButton" type='submit'>Найти город</button>
+    <select id="citySelect" name="select" size="4" type='submit'>Выберите город из списка</select>
+    <p id="cityError">Введите название города!</p>
+</form>
 <footer>
     <p>&copy; 2025 HSE Weather. Все права защищены.</p>
 </footer>
 <script>
-        const citySelect = document.getElementById('citySelect');
-        document.getElementById('findCity').addEventListener('submit', function(event) {
-           event.preventDefault();
-           document.getElementById('citySelect').options.length = 0;
-           var cityName = document.getElementById("cityName").value
-           console.log(cityName);
-           $.ajax({
-                    url: '/find_city',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data:{'name':cityName},
-                    success: function(response) {
-                       if (response === "Введите название города"){
-                            console.log(response);
-                           const cityError = document.getElementById('cityError');
-                           cityError.style.display = 'block';
+    const citySelect = document.getElementById('citySelect');
+    document.getElementById('findCity').addEventListener('submit', function(event) {
+       event.preventDefault();
+       document.getElementById('citySelect').options.length = 0;
+       var cityName = document.getElementById("cityName").value
+       console.log(cityName);
+       $.ajax({
+                url: '/find_city',
+                type: 'POST',
+                contentType: 'application/json',
+                data:{'name':cityName},
+                success: function(response) {
+                   if (response === "Введите название города"){
+                        console.log(response);
+                       const cityError = document.getElementById('cityError');
+                       cityError.style.display = 'block';
+                   }
+                   else{
+                       console.log(response);
+                       citySelect.style.display = 'block';
+                       cityError.style.display = 'none';
+                       var jsonLen = Object.keys(response).length;
+                       console.log(jsonLen);
+                       for(let i = 0; i < jsonLen; i++){
+                           var newOption = new Option(Object.keys(response)[i], `http://127.0.0.1:5000/?cityName=${response[Object.keys(response)[i]]['cityName']}&countryCode=${response[Object.keys(response)[i]]['countryCode']}`);
+                           citySelect.options.add(newOption);
                        }
-                       else{
-                           console.log(response);
-                           citySelect.style.display = 'block';
-                           cityError.style.display = 'none';
-                           var jsonLen = Object.keys(response).length;
-                           console.log(jsonLen);
-                           for(let i = 0; i < jsonLen; i++){
-                               var newOption = new Option(Object.keys(response)[i], `http://127.0.0.1:5000/?cityName=${response[Object.keys(response)[i]]['cityName']}&countryCode=${response[Object.keys(response)[i]]['countryCode']}`);
-                               citySelect.options.add(newOption);
-                           }
-                           }
-                    }
-            });
-       });
-        var select = document.getElementById("citySelect");
-        select.addEventListener("change",function(){
-            document.location.href = select.value;
+                       }
+                }
         });
+   });
+    var select = document.getElementById("citySelect");
+    select.addEventListener("change",function(){
+        document.location.href = select.value;
+    });
 
-    </script>
+    var ctx = document.getElementById('chart').getContext('2d');
+    var chart = new Chart(ctx, {
+        type:'line',
+        title:'Прогноз погоды на 24 часа',
+        data:{
+            labels: {{ labels | tojson}},
+            datasets:[{
+                data: {{ temp_data | tojson}},
+                fill:false,
+                borderColor: 'rgb(0,80,207)',
+                tension: 0.3
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: false // This hides all text in the legend and also the labels.
+                }
+            }
+        }
+    });
+</script>
 </body>
 </html>

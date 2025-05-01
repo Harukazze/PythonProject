@@ -34,7 +34,6 @@ def weatherDataTransform(data):
     feels_like = 0
     pressure = 0
     humidity = 0
-    print(data)
     for i in data:
         for j in range(len(data[i])):
             min_temp = min(min_temp, data[i][j]['main']['temp_min'])
@@ -57,27 +56,38 @@ def fiveDaysWeather(cityName, countryCode):
         return 0
     five_day_weather = {}
     for i in weather_responce['list']:
-        if time.strftime("%d.%m.%Y", time.localtime(i['dt'])) not in five_day_weather:
-            five_day_weather[time.strftime("%d.%m.%Y", time.localtime(i['dt']))] = [i]
+        if time.strftime("%a, %b %d", time.localtime(i['dt'])) not in five_day_weather:
+            five_day_weather[time.strftime("%a, %b %d", time.localtime(i['dt']))] = [i]
         else:
-            five_day_weather[time.strftime("%d.%m.%Y", time.localtime(i['dt']))].append(i)
+            five_day_weather[time.strftime("%a, %b %d", time.localtime(i['dt']))].append(i)
     five_day_weather = weatherDataTransform(five_day_weather)
     return five_day_weather
+
+
+def hourleForecast(cityName, countryCode):
+    labels = []
+    temp_data = []
+    hourly_forecast_response = requests.get(
+        f"https://api.openweathermap.org/data/2.5/forecast/?lang=ru&q={cityName},{countryCode}&appid={os.getenv('API_KEY')}&units=metric&cnt=9")
+    for i in range(len(hourly_forecast_response.json()['list'])):
+        labels.append(time.strftime("%a, %b %d %H:%M", time.localtime(hourly_forecast_response.json()['list'][i]['dt'])))
+        temp_data.append(hourly_forecast_response.json()['list'][i]['main']['temp'])
+    return [labels, temp_data]
 
 
 @app.route('/')
 def index():
     arguments = dict(request.args)
-    print(arguments)
     if len(arguments) == 0:
         weather_data = getWeather('Токио', 'JP')
         five_day_weather = fiveDaysWeather('Токио', 'JP')
+        hourly_forecast = hourleForecast('Токио', 'JP')
+        print(hourly_forecast[0])
     else:
-        # response = requests.get(
-        #     f"http://api.openweathermap.org/geo/1.0/direct?lang=ru&q={arguments['cityName']},{arguments['countryCode']}&limit=1&appid={os.getenv("API_KEY")}").json()
         weather_data = getWeather(arguments['cityName'], arguments['countryCode'])
         five_day_weather = fiveDaysWeather(arguments['cityName'], arguments['countryCode'])
-        print(five_day_weather)
+        hourly_forecast = hourleForecast(arguments['cityName'], arguments['countryCode'])
+        print(hourly_forecast)
         if weather_data == 0:
             return "Ошибка в получении погодных данных для выбранного города, убедитель в правильности выбранного города"
     return render_template('weather.html',
@@ -89,7 +99,9 @@ def index():
                            temp_feels_like=weather_data[4],
                            sunrise_time=weather_data[5],
                            sunset_time=weather_data[6],
-                           five_day_weather=five_day_weather)
+                           five_day_weather=five_day_weather,
+                           labels=hourly_forecast[0],
+                           temp_data=hourly_forecast[1])
 
 
 @app.route("/find_city", methods=["POST"])
