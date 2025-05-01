@@ -27,27 +27,26 @@ def getWeather(cityName, countryCode):
     return [description, temp_now, temp_max, temp_min, temp_feels_like, sunrise_time, sunset_time, name]
 
 
-def weatherDataTransform(data, description):
-    updatedData = {'MinTemp': 99999999, 'MaxTemp': -9999999, 'AvgTemp': 0, "AvgFeelsLike": 0, "AvgPressure": 0, "AvgHumidity": 0,"description": ""}
+def weatherDataTransform(data):
+    updatedData = {}
+    min_temp = 999999999
+    max_temp = -100000000
+    feels_like = 0
+    pressure = 0
+    humidity = 0
+    print(data)
     for i in data:
-        if i['temp_min'] < updatedData['MinTemp']:
-            updatedData['MinTemp'] = i['temp_min']
-        if i['temp_max'] > updatedData['MaxTemp']:
-            updatedData['MaxTemp'] = i['temp_max']
-        updatedData['AvgTemp'] += i['temp']
-        updatedData['AvgFeelsLike'] += i['feels_like']
-        updatedData['AvgPressure'] += i['pressure']
-        updatedData['AvgHumidity'] += i['humidity']
-
-    updatedData['MinTemp'] = round(updatedData['MinTemp'], 2)
-    updatedData['MaxTemp'] = round(updatedData['MaxTemp'], 2)
-    updatedData['AvgTemp'] = round(updatedData['AvgTemp'] / len(data), 2)
-    updatedData['AvgFeelsLike'] = round(updatedData['AvgFeelsLike'] / len(data), 2)
-    updatedData['AvgPressure'] = round(updatedData['AvgPressure'] / len(data), 2)
-    updatedData['AvgHumidity'] = round(updatedData['AvgHumidity'] / len(data), 2)
-    updatedData['description'] = description
-    # print(data)
-    # print(updatedData)
+        for j in range(len(data[i])):
+            min_temp = min(min_temp, data[i][j]['main']['temp_min'])
+            max_temp = max(max_temp, data[i][j]['main']['temp_max'])
+            feels_like += data[i][j]['main']['feels_like']
+            pressure += data[i][j]['main']['pressure']
+            humidity += data[i][j]['main']['humidity']
+        feels_like = round(feels_like / len(data[i]), 2)
+        pressure = round(pressure / len(data[i]), 2)
+        humidity = round(humidity / len(data[i]), 2)
+        updatedData[i] = {"MinTemp": min_temp, "MaxTemp": max_temp, "AvgFeelsLike": feels_like, "AvgPressure": pressure,
+                          "AvgHumidity": humidity, "description": data[i][0]['weather'][0]['description']}
     return updatedData
 
 
@@ -57,22 +56,12 @@ def fiveDaysWeather(cityName, countryCode):
     if weather_responce['message'] != 0:
         return 0
     five_day_weather = {}
-    counter = 0
-    outputData = []
-    print(weather_responce)
     for i in weather_responce['list']:
-        if time.strftime("%d.%m.%Y", time.localtime(time.time())) != time.strftime("%d.%m.%Y", time.localtime(i['dt'])):
-            # print(time.strftime("%d.%m.%Y %H:%M:%S", time.localtime(i['dt'])))
-            print(i['main'])
-            outputData.append(i['main'])
-            counter += 1
-            if counter == 8:
-                # print("Отправка данных")
-                transformedData = weatherDataTransform(outputData, i['weather'][0]['description'])
-                outputData.clear()
-                counter = 0
-                five_day_weather[time.strftime("%a, %b %d", time.localtime(i['dt']))] = transformedData
-    outputData.clear()
+        if time.strftime("%d.%m.%Y", time.localtime(i['dt'])) not in five_day_weather:
+            five_day_weather[time.strftime("%d.%m.%Y", time.localtime(i['dt']))] = [i]
+        else:
+            five_day_weather[time.strftime("%d.%m.%Y", time.localtime(i['dt']))].append(i)
+    five_day_weather = weatherDataTransform(five_day_weather)
     return five_day_weather
 
 
