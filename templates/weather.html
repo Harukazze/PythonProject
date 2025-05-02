@@ -48,21 +48,78 @@
     <div class='weather-container'>
         <div class="fiveDayWeather">
             <h2>Прогноз погоды на 5 дней</h2>
-            <table class="forecast-table">
+            <table class="forecast-table" id="table">
                 {% for i in five_day_weather %}
-                <tr>
+                <tr class="five-day-table" id="{{ i }}" onclick="ChangeWeatherDisplay('{{ i }}')">
                     <td>{{ i }}</td>
                     <td>{{ five_day_weather[i]['MaxTemp'] }} / {{ five_day_weather[i]['MinTemp'] }}°C</td>
                     <td>{{ five_day_weather[i]['description'] }}</td>
                 </tr>
                 {% endfor %}
             </table>
+            <div id="all-days-data" class="all-days-data" style="display:none;">
+                <div id="all-dates-div" class="all-dates-div">
+                    <ul class="all-dates">
+                        {% for i in five_day_weather %}
+                        <li class="clicableLi" id="{{i}}li" onclick="ChangeWeatherDisplay('{{i}}')">{{i}}</li>
+                        {% endfor %}
+                        <li class="clicableLi"
+                            onclick="ChangeWeatherDisplay('hide')"><?xml version="1.0" encoding="utf-8"?>
+                            <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <rect width="24" height="24" fill="white"/>
+                                <path d="M7 14.5L12 9.5L17 14.5" stroke="#000000" stroke-linecap="round"
+                                      stroke-linejoin="round"/>
+                            </svg>
+                        </li>
+                    </ul>
+                </div>
+                <div class="expend-weather-data">
+                    <div class="main-data">
+                        <span class="description-data" id="description-data">Прохладно</span>
+                        <span class="temperature-info" id="temperature-info">Максимальная температура - . Минимальная температура - .</span>
+                    </div>
+                    <div class="list-data-div">
+                        <ul class="list-data">
+                            <li id="li-feels-like"><b>Ощущается как:</b></li>
+                            <li id="li-humidity">Влажность: %</li>
+                            <li id="li-pressure">Давление:</li>
+                            <li id="li-wind-speed">Скорость ветра: м/с</li>
+                        </ul>
+                    </div>
+                </div>
+                <div id="time-temperutures" class="time-temperutures">
+                    <table id="temperature-table">
+                        <tr>
+                            <td class="time"></td>
+                            <td class="time">Утром</td>
+                            <td class="time">Днём</td>
+                            <td class="time">Вечером</td>
+                            <td class="time">Ночью</td>
+                        </tr>
+                        <tr>
+                            <td style="font-size:10px;color:#666666;padding-right:10px;"><b>Температура</b></td>
+                            <td class="time-based-temperature" id="MorningTemp"></td>
+                            <td class="time-based-temperature" id="DayTemp"></td>
+                            <td class="time-based-temperature" id="EveningTemp"></td>
+                            <td class="time-based-temperature" id="NightTemp"></td>
+                        </tr>
+                        <tr>
+                            <td style="font-size:10px;color:#666666;padding-right:10px;"><b>Ощущается как</b></td>
+                            <td class="time-based-temperature" id="MorningFeelsTemp"></td>
+                            <td class="time-based-temperature" id="DayFeelsTemp"></td>
+                            <td class="time-based-temperature" id="EveningFeelsTemp"></td>
+                            <td class="time-based-temperature" id="NightFeelsTemp"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
-    <div class = "diagram">
-        <section id = "diag">
-            <h2>График погоды на 24 часа<h2>
-            <canvas id ="chart" width="400" height="400"></canvas>
+    <div class="diagram">
+        <section id="diag">
+            <h2>График погоды на 24 часа</h2>
+            <canvas id="chart" width="400" height="400"></canvas>
         </section>
     </div>
 </div>
@@ -76,6 +133,9 @@
     <select id="citySelect" name="select" size="4" type='submit'>Выберите город из списка</select>
     <p id="cityError">Введите название города!</p>
 </form>
+<div class="divider"></div>
+
+
 <footer>
     <p>&copy; 2025 HSE Weather. Все права защищены.</p>
 </footer>
@@ -132,11 +192,67 @@
         options: {
             plugins: {
                 legend: {
-                    display: false // This hides all text in the legend and also the labels.
+                    display: false
                 }
             }
         }
     });
+
+    var prev_date = "";
+    function ChangeWeatherDisplay(date){
+        console.log(date);
+        console.log(document.getElementById("all-days-data").style);
+        if(document.getElementById("all-days-data").style.display == 'none' && date != 'hide'){
+            document.getElementById("all-days-data").style.display = 'block';
+            document.getElementById("table").style.display = 'none';
+        }
+        if (date == 'hide'){
+            document.getElementById("all-days-data").style.display = 'none';
+            document.getElementById("table").style.display = 'block';
+            document.getElementById(`${prev_date}li`).textContent = prev_date;
+            prev_date = "";
+            return 0;
+        }
+
+        if(prev_date==""){
+            prev_date = date;
+        }
+        else if(prev_date != ""){
+            document.getElementById(`${prev_date}li`).textContent = prev_date;
+            prev_date = date;
+        }
+        document.getElementById(`${date}li`).innerHTML = date.bold();
+        const dataJson = {{five_day_weather | tojson}};
+        console.log(dataJson[date]['description']);
+        const desc = dataJson[date]['description'].charAt(0).toUpperCase() + dataJson[date]['description'].slice(1);
+        document.getElementById("description-data").textContent  = desc;
+
+        document.getElementById("temperature-info").textContent = `Максимальная температура - ${dataJson[date]['MaxTemp']}°C. Минимальная температура - ${dataJson[date]['MinTemp']}°C.`
+        document.getElementById("li-feels-like").textContent = `Ощущается как ${dataJson[date]['AvgFeelsLike']}°C`
+        document.getElementById("li-humidity").textContent = `Влажность ${dataJson[date]['AvgHumidity']}%`
+        document.getElementById("li-pressure").textContent = `Давление ${Math.round(dataJson[date]['AvgPressure']/10, -1)} кПа`
+        document.getElementById("li-wind-speed").textContent = `Скорость ветра: ${dataJson[date]['WindSpeed']} м/с`
+
+        document.getElementById("MorningTemp").textContent = `${dataJson[date]['MorningTemp']}°C`
+        document.getElementById("DayTemp").textContent = `${dataJson[date]['DayTemp']}°C`
+        if(dataJson[date]['EveningTemp'] == 0){
+            document.getElementById("EveningTemp").textContent = "Нет данных";
+        }
+        else{
+            document.getElementById("EveningTemp").textContent = `${dataJson[date]['EveningTemp']}°C`
+        }
+        document.getElementById("NightTemp").textContent = `${dataJson[date]['NightTemp']}°C`
+
+        document.getElementById("MorningFeelsTemp").textContent = `${dataJson[date]['MorningFeelsTemp']}°C`
+        document.getElementById("DayFeelsTemp").textContent = `${dataJson[date]['DayFeelsTemp']}°C`
+        if(dataJson[date]['EveningFeelsTemp'] == 0){
+            document.getElementById("EveningFeelsTemp").textContent = "Нет данных";
+        }
+        else{
+            document.getElementById("EveningFeelsTemp").textContent = `${dataJson[date]['EveningFeelsTemp']}°C`
+        }
+        document.getElementById("NightFeelsTemp").textContent = `${dataJson[date]['NightFeelsTemp']}°C`
+    }
 </script>
 </body>
 </html>

@@ -69,8 +69,6 @@ h2 {
     margin-bottom: 15px;
 }
 
-
-
 /* РАЗДЕЛИТЕЛЬ */
 .divider {
     height: 1px;
@@ -110,6 +108,10 @@ h2 {
     margin: 20px 0;
 }
 
+.five-day-table:hover{
+    cursor:pointer;
+}
+
 .forecast-table {
     border-collapse: collapse;
     width: 100%;
@@ -140,7 +142,12 @@ h2 {
     text-align: right;
     color: #555;
 }
-
+.forecast-table tr:hover{
+    background-color:#dadbe6;
+}
+.time{
+    padding:20px;
+}
 /* Поиск города */
 #findCity {
     margin-top: 15px;
@@ -200,12 +207,41 @@ h2 {
     font-size: 14px;
     display: none;
 }
-
 /* НИЖНИЙ КОЛОНТИТУЛ */
+ul{
+    font-size:10px;
+    display:flex;
+}
+li{
+    padding:5px;
+}
+.clicableLi:hover{
+    background-color:#dadbe6;
+    cursor:pointer;
+}
+.main-data{
+    display:flex;
+    flex-direction: column;
+    margin-bottom:5px;
+}
+.temperature-info{
+    color:#898989;
+    font-size:10px;
+}
+.time{
+    font-size:15px;
+    color:#666666;
+}
+.time-based-temperature{
+    color:#666666;
+    font-size:10px;
+    padding-left:25px;
+}
 footer {
     text-align: center;
     margin-top: 20px;
     color: #7f8c8d;
     font-size: 14px;
 }
+
 
