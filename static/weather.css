@@ -68,7 +68,9 @@ h2 {
     margin-top: 0;
     margin-bottom: 15px;
 }
-
+.currentDateDescription{
+    text-align: center;
+}
 /* РАЗДЕЛИТЕЛЬ */
 .divider {
     height: 1px;
@@ -79,7 +81,8 @@ h2 {
 /* ПОГОДА */
 
 .weather-container {
-    max-width: 600px;
+    width: fit-content;
+    block-size: fit-content;
     margin: 0 auto;
     background: white;
     padding: 25px;

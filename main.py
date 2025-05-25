@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import time
+import pandas as pd
 from urllib.parse import unquote
 from dotenv import load_dotenv
 import requests
@@ -10,21 +11,39 @@ app.debug = True
 load_dotenv()
 app.secret_key = os.getenv("SECRET_KEY")
 
+df = pd.read_csv("weather_data.csv", sep=",")
+print(df)
+
 
 def getWeather(cityName, countryCode):
     weather_responce = requests.get(
         f"https://api.openweathermap.org/data/2.5/weather?lang=ru&q={cityName},{countryCode}&appid={os.getenv('API_KEY')}&units=metric").json()
     if 'message' in weather_responce:
         return 0
+    print(weather_responce)
     name = weather_responce['name']
-    description = weather_responce['weather'][0]['description']
+    date = time.strftime("%c", time.localtime(weather_responce['dt']))
+    country = weather_responce['sys']['country']
+    description = weather_responce['weather'][0]['description'].capitalize()
     temp_now = weather_responce['main']['temp']
     temp_max = weather_responce['main']['temp_max']
     temp_min = weather_responce['main']['temp_min']
     temp_feels_like = weather_responce['main']['feels_like']
+    windspeed = weather_responce['wind']['speed']
+    pressure = weather_responce['main']['pressure']
+    humidity = weather_responce['main']['humidity']
+    print(windspeed)
+    df.loc[len(df)] = [date, name, country, temp_now, temp_feels_like, humidity, windspeed,
+                       pressure, description]
+    df_unique = df.drop_duplicates(
+        subset=['date', 'city', 'country', 'temp', 'feels_like', 'humidity', 'windspeed', 'pressure', 'description'])
+
+    print(df_unique)
+    df_unique.to_csv('weather_data.csv', encoding='utf-8', index=False)
     sunrise_time = time.strftime("%H:%M:%S", time.localtime(weather_responce['sys']['sunrise']))
     sunset_time = time.strftime("%H:%M:%S", time.localtime(weather_responce['sys']['sunset']))
-    return [description, temp_now, temp_max, temp_min, temp_feels_like, sunrise_time, sunset_time, name]
+    return [description, temp_now, temp_max, temp_min, temp_feels_like, sunrise_time, sunset_time, name, windspeed,
+            pressure, humidity]
 
 
 def weatherDataTransform(data):
@@ -48,7 +67,6 @@ def weatherDataTransform(data):
         night_feels_temp = 0
         for j in range(len(data[i])):
             forecast_time = time.strftime("%H", time.localtime(data[i][j]['dt']))
-            print(forecast_time)
             if forecast_time in ["00", "03"]:
                 night_temp += data[i][j]['main']['temp']
                 night_feels_temp += data[i][j]['main']['feels_like']
@@ -93,7 +111,6 @@ def weatherDataTransform(data):
                           "DayTemp": day_temp, "EveningTemp": evening_temp, "NightFeelsTemp": night_feels_temp,
                           "MorningFeelsTemp": morning_feels_temp, "DayFeelsTemp": day_feels_temp,
                           "EveningFeelsTemp": evening_feels_temp}
-    print(updatedData)
     return updatedData
 
 
@@ -120,7 +137,7 @@ def hourleForecast(cityName, countryCode):
         f"https://api.openweathermap.org/data/2.5/forecast/?lang=ru&q={cityName},{countryCode}&appid={os.getenv('API_KEY')}&units=metric&cnt=9")
     for i in range(len(hourly_forecast_response.json()['list'])):
         labels.append(
-            time.strftime("%a, %b %d %H:%M", time.localtime(hourly_forecast_response.json()['list'][i]['dt'])))
+            time.strftime("%b %d %H:%M", time.localtime(hourly_forecast_response.json()['list'][i]['dt'])))
         temp_data.append(hourly_forecast_response.json()['list'][i]['main']['temp'])
     return [labels, temp_data]
 
@@ -139,7 +156,7 @@ def index():
         if weather_data == 0:
             return "Ошибка в получении погодных данных для выбранного города, убедитель в правильности выбранного города"
     return render_template('weather.html',
-                           city=weather_data[-1],
+                           city=weather_data[-4],
                            description=weather_data[0],
                            temp_now=weather_data[1],
                            temp_max=weather_data[2],
@@ -147,6 +164,9 @@ def index():
                            temp_feels_like=weather_data[4],
                            sunrise_time=weather_data[5],
                            sunset_time=weather_data[6],
+                           windspeed=weather_data[-3],
+                           pressure=weather_data[-2],
+                           humidity=weather_data[-1],
                            five_day_weather=five_day_weather,
                            labels=hourly_forecast[0],
                            temp_data=hourly_forecast[1])
@@ -155,7 +175,6 @@ def index():
 @app.route("/find_city", methods=["POST"])
 def findCity():
     data = unquote(str(request.data).split("=")[1][:-1])
-    print(data)
     cities_dict = {}
     if len(data) == 0:
         return "Введите название города"
@@ -166,7 +185,6 @@ def findCity():
     for i in responce:
         if 'local_names' in i:
             if 'ru' in i['local_names']:
-                print(i)
                 cities_dict[f"{i['local_names']['ru']}-{i['country']}"] = {'cityName': i['name'],
                                                                            'countryCode': i['country']}
 

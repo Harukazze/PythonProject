@@ -12,8 +12,8 @@
 <div class='wrapper'>
     <div class='weather-container'>
         <h1>Погода в г. {{city}}</h1>
+            <h2 class = "currentDateDescription">{{description}}</h2>
         <div class="current-weather">
-            <h2>{{description}}</h2>
             <div class="weather-details">
                 <table>
                     <tr>
@@ -31,6 +31,18 @@
                     <tr>
                         <td>Мин. температура</td>
                         <td>{{temp_min}}&#176;С</td>
+                    </tr>
+                    <tr>
+                        <td>Скорость ветра</td>
+                        <td>{{windspeed}} м/с</td>
+                    </tr>
+                    <tr>
+                        <td>Давление</td>
+                        <td>{{pressure / 10}} кПа</td>
+                    </tr>
+                    <tr>
+                        <td>Влажность</td>
+                        <td>{{humidity}}%</td>
                     </tr>
                     <tr>
                         <td>Восход солнца</td>
@@ -116,11 +128,13 @@
             </div>
         </div>
     </div>
-    <div class="diagram">
-        <section id="diag">
-            <h2>График погоды на 24 часа</h2>
-            <canvas id="chart" width="400" height="400"></canvas>
-        </section>
+    <div class = "weather-container">
+        <div class="diagram">
+            <section id="diag">
+                <h2>График погоды на 24 часа</h2>
+                <canvas id="chart" width="400" height="400"></canvas>
+            </section>
+        </div>
     </div>
 </div>
 
