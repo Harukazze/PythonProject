@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import time
 import pandas as pd
-import numpy as np
 from urllib.parse import unquote
 from dotenv import load_dotenv
 import requests
