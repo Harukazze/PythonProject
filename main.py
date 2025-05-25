@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import time
 import pandas as pd
+import numpy as np
 from urllib.parse import unquote
 from dotenv import load_dotenv
 import requests
@@ -13,6 +14,45 @@ app.secret_key = os.getenv("SECRET_KEY")
 
 df = pd.read_csv("weather_data.csv", sep=",")
 print(df)
+
+
+def calculateWeatherQuality(temp, humidity, windspeed, pressure):
+    weight = {
+        'temp': 0.3,
+        'humidity': 0.25,
+        'wind': 0.2,
+        'pressure': 0.25,
+    }
+    #print(temp, humidity, windspeed, pressure)
+    if 18 <= temp <= 24:  # Оптимальная температура - от 18 до 24
+        temp_score = 1
+    else:
+        temp_score = 1 - min(abs(temp - 18), abs(temp - 24)) / 10
+    #print(temp_score)
+
+    if 40 <= humidity <= 60:
+        humidity_score = 1
+    else:
+        humidity_score = 1 - min(abs(humidity - 40), abs(humidity - 60)) / 100
+    #print(humidity_score)
+
+    if 0 <= windspeed <= 5:  # от 0 до 5 м/c
+        wind_score = 1
+    else:
+        wind_score = 1 - min(windspeed, abs(windspeed - 5)) / 10
+    #print(wind_score)
+
+    if 1013 <= pressure <= 1067:
+        pressure_score = 1
+    else:
+        pressure_score = 1 - min(abs(pressure - 1013), abs(pressure - 1067)) / 10
+    #print(pressure_score)
+
+    weather_score = (temp_score * weight['temp'] + humidity_score * weight['humidity'] + wind_score * weight[
+        'wind'] + pressure_score * weight['pressure']) * 10
+
+    return {'temp_score': temp_score, 'humidity_score': humidity_score, 'wind_score': wind_score,
+            'pressure_score': pressure_score, 'weather_score': round(weather_score, 2)}
 
 
 def getWeather(cityName, countryCode):
@@ -32,9 +72,11 @@ def getWeather(cityName, countryCode):
     windspeed = weather_responce['wind']['speed']
     pressure = weather_responce['main']['pressure']
     humidity = weather_responce['main']['humidity']
-    print(windspeed)
+    calculated_weather_scores = calculateWeatherQuality(temp_now, humidity, windspeed, pressure)
     df.loc[len(df)] = [date, name, country, temp_now, temp_feels_like, humidity, windspeed,
-                       pressure, description]
+                       pressure, description, calculated_weather_scores['temp_score'],
+                       calculated_weather_scores['humidity_score'], calculated_weather_scores['wind_score'],
+                       calculated_weather_scores['pressure_score'], calculated_weather_scores['weather_score']]
     df_unique = df.drop_duplicates(
         subset=['date', 'city', 'country', 'temp', 'feels_like', 'humidity', 'windspeed', 'pressure', 'description'])
 
