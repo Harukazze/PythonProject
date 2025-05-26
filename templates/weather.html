@@ -3,16 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?xml version="1.0" encoding="utf-8"?>
     <title>HSE Weather</title>
     <link rel="stylesheet" href="static/weather.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
+<p><b>Введите название города:</b><br>
+<form id="findCity" type="submit">
+    <input id="cityName" type="text" size="40">
+    <button id="findCityButton" type='submit'>Найти город</button>
+    <select class="citySelect" id="citySelect" name="select" size="4" type='submit'>Выберите город из списка</select>
+    <p id="cityError">Введите название города!</p>
+</form>
+<div class="divider"></div>
 <div class='wrapper'>
     <div class='weather-container'>
         <h1>Погода в г. {{city}}</h1>
-            <h2 class = "currentDateDescription">{{description}}</h2>
+        <h2 class="currentDateDescription">{{description}}</h2>
         <div class="current-weather">
             <div class="weather-details">
                 <table>
@@ -75,8 +84,7 @@
                         {% for i in five_day_weather %}
                         <li class="clicableLi" id="{{i}}li" onclick="ChangeWeatherDisplay('{{i}}')">{{i}}</li>
                         {% endfor %}
-                        <li class="clicableLi"
-                            onclick="ChangeWeatherDisplay('hide')"><?xml version="1.0" encoding="utf-8"?>
+                        <li class="clicableLi" onclick="ChangeWeatherDisplay('hide')">
                             <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none"
                                  xmlns="http://www.w3.org/2000/svg">
                                 <rect width="24" height="24" fill="white"/>
@@ -128,32 +136,47 @@
             </div>
         </div>
     </div>
-    <div class = "weather-container">
+    <div class="divider"></div>
+    <div class="weather-container">
         <div class="diagram">
             <section id="diag">
-                <h2>График погоды на 24 часа</h2>
-                <canvas id="chart" width="400" height="400"></canvas>
+                <h2>График температуры на 24 часа (°С)</h2>
+                <canvas id="chart"></canvas>
             </section>
         </div>
     </div>
 </div>
-
+<div class="divider"></div>
+<div class="weather-analyze">
+    <div id="svg-container" width="120px" heigth="105px"></div>
+    <div class="desc">
+        <p class="indexes" id="weather_score">Индекс качества погодных условий: <b>{{weather_score}}</b>
+        <p class="indexes" id="weather_score_description"></p>
+    </div>
+    <!--    <p class="indexes" id="temp_score">Индекс температуры: {{temp_score}}</p>-->
+    <!--    <p class="indexes" id="humidity_score">Индекс влажности: {{humidity_score}}</p>-->
+    <!--    <p class="indexes" id="wind_score">Индекс скорости ветра: {{wind_score}}</p>-->
+    <!--    <p class="indexes" id="pressure_score">Индекс давления: {{pressure_score}}</p>-->
 </div>
-<div class="divider"></div>
-<p><b>Введите название города:</b><br>
-<form id="findCity" type="submit">
-    <input id="cityName" type="text" size="40">
-    <button id="findCityButton" type='submit'>Найти город</button>
-    <select id="citySelect" name="select" size="4" type='submit'>Выберите город из списка</select>
-    <p id="cityError">Введите название города!</p>
-</form>
-<div class="divider"></div>
-
-
 <footer>
     <p>&copy; 2025 HSE Weather. Все права защищены.</p>
 </footer>
 <script>
+    function changeSVG(){
+        var weather_score = Math.round({{weather_score}});
+        fetch(`/static/assets/svg/Section ${weather_score}.svg`)
+        .then(response => response.text())
+        .then(svg => {
+        document.getElementById('svg-container').innerHTML = svg;
+        });
+        const dict = new Map([[1,"Очень плохая погода"], [2,"Очень плохая погода"], [3,"Плохая погода"], [4,"Плохая погода"],
+        [5,"Удовлетноврительная погода"], [6,"Удовлетноврительная погода"], [7,"Хорошая погода"], [8,"Хорошая погода"],
+        [9,"Идеальная погода"], [10,"Идеальная погода"]]);
+
+        document.getElementById('weather_score_description').textContent = dict.get(weather_score);
+    }
+
+    changeSVG();
     const citySelect = document.getElementById('citySelect');
     document.getElementById('findCity').addEventListener('submit', function(event) {
        event.preventDefault();
@@ -198,7 +221,7 @@
             labels: {{ labels | tojson}},
             datasets:[{
                 data: {{ temp_data | tojson}},
-                fill:false,
+                fill:true,
                 borderColor: 'rgb(0,80,207)',
                 tension: 0.3
             }]

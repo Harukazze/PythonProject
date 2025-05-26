@@ -12,7 +12,7 @@ load_dotenv()
 app.secret_key = os.getenv("SECRET_KEY")
 
 df = pd.read_csv("weather_data.csv", sep=",")
-print(df)
+#print(df)
 
 
 def calculateWeatherQuality(temp, humidity, windspeed, pressure):
@@ -22,30 +22,30 @@ def calculateWeatherQuality(temp, humidity, windspeed, pressure):
         'wind': 0.2,
         'pressure': 0.25,
     }
-    #print(temp, humidity, windspeed, pressure)
+    # print(temp, humidity, windspeed, pressure)
     if 18 <= temp <= 24:  # Оптимальная температура - от 18 до 24
         temp_score = 1
     else:
-        temp_score = 1 - min(abs(temp - 18), abs(temp - 24)) / 10
-    #print(temp_score)
+        temp_score = round(1 - min(abs(temp - 18), abs(temp - 24)) / 10, 2)
+    # print(temp_score)
 
     if 40 <= humidity <= 60:
         humidity_score = 1
     else:
-        humidity_score = 1 - min(abs(humidity - 40), abs(humidity - 60)) / 100
-    #print(humidity_score)
+        humidity_score = round(1 - min(abs(humidity - 40), abs(humidity - 60)) / 100, 2)
+    # print(humidity_score)
 
     if 0 <= windspeed <= 5:  # от 0 до 5 м/c
         wind_score = 1
     else:
-        wind_score = 1 - min(windspeed, abs(windspeed - 5)) / 10
-    #print(wind_score)
+        wind_score = round(1 - min(windspeed, abs(windspeed - 5)) / 10, 2)
+    # print(wind_score)
 
     if 1013 <= pressure <= 1067:
         pressure_score = 1
     else:
-        pressure_score = 1 - min(abs(pressure - 1013), abs(pressure - 1067)) / 10
-    #print(pressure_score)
+        pressure_score = round(1 - min(abs(pressure - 1013), abs(pressure - 1067)) / 10, 2)
+    # print(pressure_score)
 
     weather_score = (temp_score * weight['temp'] + humidity_score * weight['humidity'] + wind_score * weight[
         'wind'] + pressure_score * weight['pressure']) * 10
@@ -79,12 +79,18 @@ def getWeather(cityName, countryCode):
     df_unique = df.drop_duplicates(
         subset=['date', 'city', 'country', 'temp', 'feels_like', 'humidity', 'windspeed', 'pressure', 'description'])
 
-    print(df_unique)
+    #print(df_unique)
     df_unique.to_csv('weather_data.csv', encoding='utf-8', index=False)
     sunrise_time = time.strftime("%H:%M:%S", time.localtime(weather_responce['sys']['sunrise']))
     sunset_time = time.strftime("%H:%M:%S", time.localtime(weather_responce['sys']['sunset']))
-    return [description, temp_now, temp_max, temp_min, temp_feels_like, sunrise_time, sunset_time, name, windspeed,
-            pressure, humidity]
+    return {"description": description, "temp_now": temp_now, "temp_max": temp_max, "temp_min": temp_min,
+            "temp_feels_like": temp_feels_like,
+            "sunrise_time": sunrise_time, "sunset_time": sunset_time, "name": name, "windspeed": windspeed,
+            "pressure": pressure, "humidity": humidity, "temp_score": calculated_weather_scores["temp_score"],
+            "humidity_score": calculated_weather_scores["humidity_score"],
+            "wind_score": calculated_weather_scores["wind_score"],
+            "pressure_score": calculated_weather_scores["pressure_score"],
+            "weather_score": calculated_weather_scores["weather_score"]}
 
 
 def weatherDataTransform(data):
@@ -186,6 +192,7 @@ def hourleForecast(cityName, countryCode):
 @app.route('/')
 def index():
     arguments = dict(request.args)
+    print(request)
     if len(arguments) == 0:
         weather_data = getWeather('Токио', 'JP')
         five_day_weather = fiveDaysWeather('Токио', 'JP')
@@ -197,17 +204,22 @@ def index():
         if weather_data == 0:
             return "Ошибка в получении погодных данных для выбранного города, убедитель в правильности выбранного города"
     return render_template('weather.html',
-                           city=weather_data[-4],
-                           description=weather_data[0],
-                           temp_now=weather_data[1],
-                           temp_max=weather_data[2],
-                           temp_min=weather_data[3],
-                           temp_feels_like=weather_data[4],
-                           sunrise_time=weather_data[5],
-                           sunset_time=weather_data[6],
-                           windspeed=weather_data[-3],
-                           pressure=weather_data[-2],
-                           humidity=weather_data[-1],
+                           city=weather_data['name'],
+                           description=weather_data['description'],
+                           temp_now=weather_data['temp_now'],
+                           temp_max=weather_data['temp_max'],
+                           temp_min=weather_data['temp_min'],
+                           temp_feels_like=weather_data['temp_feels_like'],
+                           sunrise_time=weather_data['sunrise_time'],
+                           sunset_time=weather_data['sunset_time'],
+                           windspeed=weather_data['windspeed'],
+                           pressure=weather_data['pressure'],
+                           humidity=weather_data['humidity'],
+                           temp_score=weather_data['temp_score'],
+                           humidity_score=weather_data['humidity_score'],
+                           wind_score=weather_data['wind_score'],
+                           pressure_score=weather_data['pressure_score'],
+                           weather_score=weather_data['weather_score'],
                            five_day_weather=five_day_weather,
                            labels=hourly_forecast[0],
                            temp_data=hourly_forecast[1])

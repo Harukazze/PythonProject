@@ -1,4 +1,17 @@
-
+@media (max-width: 525px) {
+    .wrapper{
+        display:flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+    }
+    #chart{
+        max-width:300px;
+        height:500px;
+    }
+    .fiveDayWeather{
+        max-width:400px;
+    }
+}
 body {
     font-family: 'Arial', sans-serif;
     line-height: 1.6;
@@ -32,6 +45,10 @@ padding:10px;
 padding:10px;
 margin-left: 15px;
 }
+canvas{
+    width:500px;
+    height:500px;
+}
 
 ul {
     list-style-type: none;
@@ -51,6 +68,8 @@ li{
 }
 .description{
     margin-left:auto;
+}
+.citySelect{
 }
 
 /* ТЕКСТОВЫЕ ИЗМЕНЕНИЯ */
@@ -88,6 +107,22 @@ h2 {
     padding: 25px;
     border-radius: 10px;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+}
+.weather-analyze{
+    display:flex;
+    width: fit-content;
+    block-size: fit-content;
+    background: white;
+    padding: 5px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    align-items:center;
+}
+.indexes{
+     margin-botton:5px;
+}
+.desc{
+    padding-right:10px;
 }
 
 /* Текущая погода */
@@ -195,13 +230,15 @@ h2 {
 }
 
 #citySelect {
-    margin-top: 15px;
-    width: 100%;
+    width: 325px;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 6px;
     font-size: 16px;
     background-color: white;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
 }
 
 #cityError {
@@ -239,6 +276,9 @@ li{
     color:#666666;
     font-size:10px;
     padding-left:25px;
+}
+#svg-container{
+  background-image: url(../assets/svg/Section1.svg);
 }
 footer {
     text-align: center;
