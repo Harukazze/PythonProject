@@ -202,7 +202,7 @@ def index():
         five_day_weather = fiveDaysWeather(arguments['cityName'], arguments['countryCode'])
         hourly_forecast = hourleForecast(arguments['cityName'], arguments['countryCode'])
         if weather_data == 0:
-            return "Ошибка в получении погодных данных для выбранного города, убедитель в правильности выбранного города"
+            return "Ошибка в получении погодных данных для выбранного города, убедитесь в правильности выбранного города"
     return render_template('weather.html',
                            city=weather_data['name'],
                            description=weather_data['description'],
