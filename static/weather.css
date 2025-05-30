@@ -277,9 +277,6 @@ li{
     font-size:10px;
     padding-left:25px;
 }
-#svg-container{
-  background-image: url(../assets/svg/Section1.svg);
-}
 footer {
     text-align: center;
     margin-top: 20px;

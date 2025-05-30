@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, Response
 import time
 import pandas as pd
 from urllib.parse import unquote
@@ -9,10 +9,10 @@ import os
 app = Flask(__name__)
 app.debug = True
 load_dotenv()
+app.config['DOWNLOAD_FOLDER'] = 'uploads'
 app.secret_key = os.getenv("SECRET_KEY")
 
-df = pd.read_csv("weather_data.csv", sep=",")
-#print(df)
+df = pd.read_csv("weather_data.csv", sep=",", encoding="utf-8", encoding_errors='replace')
 
 
 def calculateWeatherQuality(temp, humidity, windspeed, pressure):
@@ -79,7 +79,7 @@ def getWeather(cityName, countryCode):
     df_unique = df.drop_duplicates(
         subset=['date', 'city', 'country', 'temp', 'feels_like', 'humidity', 'windspeed', 'pressure', 'description'])
 
-    #print(df_unique)
+    # print(df_unique)
     df_unique.to_csv('weather_data.csv', encoding='utf-8', index=False)
     sunrise_time = time.strftime("%H:%M:%S", time.localtime(weather_responce['sys']['sunrise']))
     sunset_time = time.strftime("%H:%M:%S", time.localtime(weather_responce['sys']['sunset']))
@@ -189,10 +189,15 @@ def hourleForecast(cityName, countryCode):
     return [labels, temp_data]
 
 
-@app.route('/')
+def getCityData(data):
+    print(data)
+    print('ааааа сасите')
+
+
+@app.route('/', methods=["GET", "POST"])
 def index():
     arguments = dict(request.args)
-    print(request)
+    print(dict(request.form))
     if len(arguments) == 0:
         weather_data = getWeather('Токио', 'JP')
         five_day_weather = fiveDaysWeather('Токио', 'JP')
@@ -203,6 +208,14 @@ def index():
         hourly_forecast = hourleForecast(arguments['cityName'], arguments['countryCode'])
         if weather_data == 0:
             return "Ошибка в получении погодных данных для выбранного города, убедитель в правильности выбранного города"
+    if len(dict(request.form)) != 0:
+        if "getCityData" in dict(request.form):
+            data = dict(request.form)["getCityData"]
+            city_rows = df[df['city'].isin([f'{data}'])]
+            city_rows.to_csv(f'uploads/{data}_data.csv', encoding='utf-8', index=False)
+            file_path = os.path.join(app.config['DOWNLOAD_FOLDER'], f'{data}_data.csv')
+            print(file_path)
+            return send_file(file_path, mimetype='text/csv', as_attachment=True)
     return render_template('weather.html',
                            city=weather_data['name'],
                            description=weather_data['description'],

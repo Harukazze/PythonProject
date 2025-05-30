@@ -10,6 +10,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
+
 <p><b>Введите название города:</b><br>
 <form id="findCity" type="submit">
     <input id="cityName" type="text" size="40">
@@ -17,6 +18,12 @@
     <select class="citySelect" id="citySelect" name="select" size="4" type='submit'>Выберите город из списка</select>
     <p id="cityError">Введите название города!</p>
 </form>
+
+<form action="" id="getCityData" method = "POST">
+    <button name = "getCityData" value = "{{city}}" type='submit'>Получить информацию по городу {{city}}
+    </button>
+</form>
+
 <div class="divider"></div>
 <div class='wrapper'>
     <div class='weather-container'>
@@ -190,7 +197,7 @@
                 data:{'name':cityName},
                 success: function(response) {
                    if (response === "Введите название города"){
-                        console.log(response);
+                       console.log(response);
                        const cityError = document.getElementById('cityError');
                        cityError.style.display = 'block';
                    }
@@ -204,10 +211,12 @@
                            var newOption = new Option(Object.keys(response)[i], `http://127.0.0.1:5000/?cityName=${response[Object.keys(response)[i]]['cityName']}&countryCode=${response[Object.keys(response)[i]]['countryCode']}`);
                            citySelect.options.add(newOption);
                        }
-                       }
+                   }
                 }
         });
    });
+
+
     var select = document.getElementById("citySelect");
     select.addEventListener("change",function(){
         document.location.href = select.value;
