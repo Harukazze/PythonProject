@@ -212,6 +212,7 @@ def index():
     arguments = dict(request.args)
     print(arguments)
     print(dict(request.form))
+    print(request.form.getlist("CSVData"))
     if len(arguments) == 0:
         weather_data = getWeather('Токио', 'JP')
         five_day_weather = fiveDaysWeather('Токио', 'JP')
@@ -226,7 +227,10 @@ def index():
         if "getCityData" in dict(request.form):
             if len(arguments) == 0:
                 createQualityCSV("Токио", "JP")
-                city_rows = df[df['city'].isin(['Токио']) & df['country'].isin(['JP'])]
+                if len(request.form.getlist("CSVData")) == 0:
+                    return "Выберите столбцы, которые нужно оставить"
+                else:
+                    city_rows = df[request.form.getlist("CSVData")]
                 print(city_rows)
                 city_rows.to_csv('uploads/Токио_JP_data.csv', encoding='utf-8', index=False)
                 file_path = os.path.join(app.config['DOWNLOAD_FOLDER'], f'Токио_JP_data.csv')

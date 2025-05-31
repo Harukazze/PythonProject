@@ -18,12 +18,6 @@
     <select class="citySelect" id="citySelect" name="select" size="4" type='submit'>Выберите город из списка</select>
     <p id="cityError">Введите название города!</p>
 </form>
-
-<form action="" id="getCityData" method = "POST">
-    <button name = "getCityData" value = "{{city}}" type='submit'>Получить информацию по городу {{city}}
-    </button>
-</form>
-
 <div class="divider"></div>
 <div class='wrapper'>
     <div class='weather-container'>
@@ -164,6 +158,29 @@
     <!--    <p class="indexes" id="humidity_score">Индекс влажности: {{humidity_score}}</p>-->
     <!--    <p class="indexes" id="wind_score">Индекс скорости ветра: {{wind_score}}</p>-->
     <!--    <p class="indexes" id="pressure_score">Индекс давления: {{pressure_score}}</p>-->
+</div>
+<div class="divider"></div>
+<div class="weather-container">
+    <h2>Скачать CSV отчёт</h2>
+    <p>Выберите нужные столбцы, которые вы хотите оставить в отчёте</p>
+    <form action="" id="getCityData" method="POST">
+        <input type="checkbox" name="CSVData" value="date" checked>Дата<br>
+        <input type="checkbox" name="CSVData" value="city" checked>Название города<br>
+        <input type="checkbox" name="CSVData" value="country" checked>Страна<br>
+        <input type="checkbox" name="CSVData" value="temp" checked>Температура<br>
+        <input type="checkbox" name="CSVData" value="feels_like" checked>Температура по ощущению<br>
+        <input type="checkbox" name="CSVData" value="humidity" checked>Влажность<br>
+        <input type="checkbox" name="CSVData" value="windspeed" checked>Скорость ветра<br>
+        <input type="checkbox" name="CSVData" value="pressure" checked>Давление<br>
+        <input type="checkbox" name="CSVData" value="description" checked>Описание погоды<br>
+        <input type="checkbox" name="CSVData" value="temp_score" checked>Индекс температуры<br>
+        <input type="checkbox" name="CSVData" value="humidity_score" checked>Индекс влажности<br>
+        <input type="checkbox" name="CSVData" value="wind_score" checked>Индекс ветра<br>
+        <input type="checkbox" name="CSVData" value="pressure_score" checked>Индекс давления<br>
+        <input type="checkbox" name="CSVData" value="weather_score" checked>Индекс качества погодных условий<br>
+        <button name="getCityData" value="{{city}}" type='submit'>Получить информацию по городу {{city}}
+        </button>
+    </form>
 </div>
 <footer>
     <p>&copy; 2025 HSE Weather. Все права защищены.</p>
