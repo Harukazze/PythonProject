@@ -190,14 +190,9 @@ def hourleForecast(cityName, countryCode):
     return [labels, temp_data]
 
 
-def getCityData(data):
-    print(data)
-    print('ааааа сасите')
-
-
 def createQualityCSV(cityName, countryCode):
     df_quality = pd.DataFrame(columns=["city", "weather_type", "count", "frequency"])
-    city_rows = df[df['city'].isin([f'{cityName}']) & df['country'].isin(['JP'])]
+    city_rows = df[df['city'].isin([f'{cityName}']) & df['country'].isin([f'{countryCode}'])]
     value_counts = city_rows['description'].value_counts()
     all_count = sum(value_counts)
     print(dict(value_counts))
@@ -205,6 +200,8 @@ def createQualityCSV(cityName, countryCode):
         df_quality.loc[len(df_quality)] = [cityName, i, int(dict(value_counts)[i]),
                                            int(dict(value_counts)[i]) / all_count]
     print(df_quality)
+    df_quality.to_csv(f"uploads/{cityName}_{countryCode}_Quality.csv", encoding='utf-8', index=False)
+    return os.path.join(app.config['DOWNLOAD_FOLDER'], f'{cityName}_{countryCode}_Quality.csv')
 
 
 @app.route('/', methods=["GET", "POST"])
@@ -219,28 +216,37 @@ def index():
         hourly_forecast = hourleForecast('Токио', 'JP')
     else:
         weather_data = getWeather(arguments['cityName'], arguments['countryCode'])
+        print(weather_data)
         five_day_weather = fiveDaysWeather(arguments['cityName'], arguments['countryCode'])
         hourly_forecast = hourleForecast(arguments['cityName'], arguments['countryCode'])
         if weather_data == 0:
             return "Ошибка в получении погодных данных для выбранного города, убедитель в правильности выбранного города"
+
     if len(dict(request.form)) != 0:
         if "getCityData" in dict(request.form):
             if len(arguments) == 0:
-                createQualityCSV("Токио", "JP")
                 if len(request.form.getlist("CSVData")) == 0:
                     return "Выберите столбцы, которые нужно оставить"
                 else:
-                    city_rows = df[request.form.getlist("CSVData")]
-                print(city_rows)
+                    city_rows = df[df['city'].isin(['Токио']) & df['country'].isin(['JP'])]
                 city_rows.to_csv('uploads/Токио_JP_data.csv', encoding='utf-8', index=False)
                 file_path = os.path.join(app.config['DOWNLOAD_FOLDER'], f'Токио_JP_data.csv')
+
             else:
                 data = dict(request.form)["getCityData"]
-                createQualityCSV(dict(request.form)["getCityData"], arguments['countryCode'])
                 city_rows = df[df['city'].isin([f'{data}']) & df['country'].isin([f'{arguments["countryCode"]}'])]
                 city_rows.to_csv(f'uploads/{data}_{arguments['countryCode']}_data.csv', encoding='utf-8', index=False)
                 file_path = os.path.join(app.config['DOWNLOAD_FOLDER'], f'{data}_{arguments['countryCode']}_data.csv')
+
             print(file_path)
+            return send_file(file_path, mimetype='text/csv', as_attachment=True)
+
+        if "downloadQualityReport" in dict(request.form):
+            if len(arguments) == 0:
+                file_path = createQualityCSV("Токио", "JP")
+            else:
+                data = dict(request.form)["downloadQualityReport"]
+                file_path = createQualityCSV(data, arguments['countryCode'])
             return send_file(file_path, mimetype='text/csv', as_attachment=True)
     return render_template('weather.html',
                            city=weather_data['name'],
@@ -270,7 +276,7 @@ def findCity():
     cities_dict = {}
     if len(data) == 0:
         return "Введите название города"
-
+    print(f"Ищем город {data}")
     responce = requests.get(
         f"http://api.openweathermap.org/geo/1.0/direct?lang=ru&q={data}&limit=4&appid={os.getenv('API_KEY')}").json()
 
