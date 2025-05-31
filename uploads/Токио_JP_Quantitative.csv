@@ -1,0 +1,2 @@
+max_temp,min_temp,average_temp,dis_temp,stand_temp_dev,max_humidity,min_humidity,average_humidity,dis_humidity,stand_humidity_dev,max_pressure,min_pressure,average_pressure,dis_pressure,stand_pressure_dev
+19.14,15.9,17.191369863013698,1.0992647640791473,1.0484582796082766,89.0,52.0,68.64383561643835,58.53805175038052,7.651016386754149,1022.0,999.0,1012.3835616438356,83.5730593607306,9.141830197544177

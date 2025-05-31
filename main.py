@@ -200,16 +200,46 @@ def createQualityCSV(cityName, countryCode):
         df_quality.loc[len(df_quality)] = [cityName, i, int(dict(value_counts)[i]),
                                            int(dict(value_counts)[i]) / all_count]
     print(df_quality)
+    df_quality = df_quality.drop_duplicates()
     df_quality.to_csv(f"uploads/{cityName}_{countryCode}_Quality.csv", encoding='utf-8', index=False)
     return os.path.join(app.config['DOWNLOAD_FOLDER'], f'{cityName}_{countryCode}_Quality.csv')
+
+
+def createQuantitativeCSV(cityName, countryCode):
+    a = ["temp", "humidity", "pressure"]
+    cols = []
+    for i in a:
+        cols.append(f"max_{i}")
+        cols.append(f"min_{i}")
+        cols.append(f"average_{i}")
+        cols.append(f"dis_{i}")
+        cols.append(f"stand_{i}_dev")
+
+    df_quantitative = pd.DataFrame(
+        columns=cols)
+
+    city_rows = df[df['city'].isin([f'{cityName}']) & df['country'].isin([f'{countryCode}'])]
+    all_data = []
+    for i in a:
+        all_data.append(city_rows[f"{i}"].max())
+        all_data.append(city_rows[f"{i}"].min())
+        all_data.append(city_rows[f"{i}"].mean())
+        all_data.append(city_rows[f"{i}"].var())
+        all_data.append(city_rows[f"{i}"].std())
+
+    df_quantitative.loc[0] = all_data
+
+    df_quantitative.to_csv(f"uploads/{cityName}_{countryCode}_Quantitative.csv", encoding='utf-8', index=False)
+
+    return os.path.join(app.config['DOWNLOAD_FOLDER'], f"{cityName}_{countryCode}_Quantitative.csv")
 
 
 @app.route('/', methods=["GET", "POST"])
 def index():
     arguments = dict(request.args)
-    print(arguments)
+    # print(arguments)
     print(dict(request.form))
-    print(request.form.getlist("CSVData"))
+    # print(request.form.getlist("CSVData"))
     if len(arguments) == 0:
         weather_data = getWeather('Токио', 'JP')
         five_day_weather = fiveDaysWeather('Токио', 'JP')
@@ -247,6 +277,15 @@ def index():
             else:
                 data = dict(request.form)["downloadQualityReport"]
                 file_path = createQualityCSV(data, arguments['countryCode'])
+            return send_file(file_path, mimetype='text/csv', as_attachment=True)
+
+        elif "downloadQuantitativeReport" in dict(request.form):
+            if len(arguments) == 0:
+                file_path = createQuantitativeCSV("Токио", "JP")
+            else:
+                data = dict(request.form)["downloadQuantitativeReport"]
+                file_path = createQuantitativeCSV(data, arguments['countryCode'])
+            print(file_path)
             return send_file(file_path, mimetype='text/csv', as_attachment=True)
     return render_template('weather.html',
                            city=weather_data['name'],
