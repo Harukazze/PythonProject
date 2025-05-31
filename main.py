@@ -182,6 +182,7 @@ def hourleForecast(cityName, countryCode):
     temp_data = []
     hourly_forecast_response = requests.get(
         f"https://api.openweathermap.org/data/2.5/forecast/?lang=ru&q={cityName},{countryCode}&appid={os.getenv('API_KEY')}&units=metric&cnt=9")
+    print(hourly_forecast_response.json(), hourly_forecast_response.url)
     for i in range(len(hourly_forecast_response.json()['list'])):
         labels.append(
             time.strftime("%b %d %H:%M", time.localtime(hourly_forecast_response.json()['list'][i]['dt'])))
@@ -209,6 +210,7 @@ def createQualityCSV(cityName, countryCode):
 @app.route('/', methods=["GET", "POST"])
 def index():
     arguments = dict(request.args)
+    print(arguments)
     print(dict(request.form))
     if len(arguments) == 0:
         weather_data = getWeather('Токио', 'JP')
@@ -225,7 +227,8 @@ def index():
             if len(arguments) == 0:
                 createQualityCSV("Токио", "JP")
                 city_rows = df[df['city'].isin(['Токио']) & df['country'].isin(['JP'])]
-                city_rows.to_csv('uploads/Токио_data.csv', encoding='utf-8', index=False)
+                print(city_rows)
+                city_rows.to_csv('uploads/Токио_JP_data.csv', encoding='utf-8', index=False)
                 file_path = os.path.join(app.config['DOWNLOAD_FOLDER'], f'Токио_JP_data.csv')
             else:
                 data = dict(request.form)["getCityData"]
