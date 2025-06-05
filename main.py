@@ -5,6 +5,11 @@ from urllib.parse import unquote
 from dotenv import load_dotenv
 import requests
 import os
+import matplotlib
+matplotlib.use('Agg') #Обязательно ДО pyplot
+import matplotlib.pyplot as plt
+import io
+import base64
 
 app = Flask(__name__)
 app.debug = True
@@ -287,6 +292,31 @@ def index():
                 file_path = createQuantitativeCSV(data, arguments['countryCode'])
             print(file_path)
             return send_file(file_path, mimetype='text/csv', as_attachment=True)
+            
+    #ДИАГРАММА
+    # Данные
+    categories = ['Минимальная', 'Средняя', 'Максимальная']
+    values = [weather_data['temp_min'], weather_data['temp_now'], weather_data['temp_max']]  # min, avg, max
+
+    plt.figure(figsize=(6, 6))
+    bars = plt.bar(categories, values, color=['#66c2a5', '#8da0cb', '#e78ac3'], edgecolor='black')
+
+    for bar in bars:
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width() / 2, height + 0.3, f'{height}°C', ha='center')
+
+    plt.title('Температура за день', fontsize=14, pad=15)
+    plt.ylabel('Температура (°C)')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+
+    # Сохранение в буфер
+    img = BytesIO()
+    plt.savefig(img, format='png', bbox_inches='tight', dpi=100)
+    img.seek(0)
+    plt.close()
+
+    img_base64 = base64.b64encode(img.getvalue()).decode('utf-8')
+    
     return render_template('weather.html',
                            city=weather_data['name'],
                            description=weather_data['description'],
@@ -306,7 +336,8 @@ def index():
                            weather_score=weather_data['weather_score'],
                            five_day_weather=five_day_weather,
                            labels=hourly_forecast[0],
-                           temp_data=hourly_forecast[1])
+                           temp_data=hourly_forecast[1],
+                           diagramm_url=img_base64)
 
 
 @app.route("/find_city", methods=["POST"])
