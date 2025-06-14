@@ -293,7 +293,7 @@ def index():
             print(file_path)
             return send_file(file_path, mimetype='text/csv', as_attachment=True)
             
-    #ДИАГРАММА
+    # ДИАГРАММА 1
     # Данные
     categories = ['Минимальная', 'Средняя', 'Максимальная']
     values = [weather_data['temp_min'], weather_data['temp_now'], weather_data['temp_max']]  # min, avg, max
@@ -315,7 +315,75 @@ def index():
     img.seek(0)
     plt.close()
 
-    img_base64 = base64.b64encode(img.getvalue()).decode('utf-8')
+    img_base64_1 = base64.b64encode(img.getvalue()).decode('utf-8')
+
+    # ДИАГРАММА 2
+    # Данные
+
+    if len(arguments) == 0:
+        city = 'Токио'
+        c_code = 'JP'
+    else:
+        city = arguments['cityName']
+        c_code = arguments['countryCode']
+
+    city_rows = df[df['city'].isin([f'{city}']) & df['country'].isin([f'{c_code}'])]
+    value_counts = dict(city_rows['description'].value_counts())
+
+    display_names, categories, data_values = prepare_weather_data([weather_data['name']], value_counts)
+    '''
+    display_names: Города
+    categories: Описания погоды
+    data_values: Количество описаний погоды (string)
+    '''
+
+    data_values = [int(x) for x in data_values]
+
+    # Визуализация (вертикальный график)
+    fig, ax = plt.subplots(figsize=(8, 6))
+    x = np.arange(len(categories))  # Категории на оси X
+    bar_width = 0.6
+
+    ax.bar(x, data_values, width=bar_width, color=['#1f77b4', '#ff7f0e', '#2ca02c'])
+
+    # Настройки
+    ax.set_xlabel("Тип погоды")
+    ax.set_ylabel("Количество дней")
+    ax.set_title(f"Погода в {display_names[0]}")
+    ax.set_xticks(x)
+    ax.set_xticklabels(categories, rotation=45)
+    plt.tight_layout()
+
+    # Сохранение
+    img = BytesIO()
+    plt.savefig(img, format="png", dpi=100, bbox_inches="tight")
+    img.seek(0)
+    plt.close()
+
+    img_base64_2 = base64.b64encode(img.getvalue()).decode('utf-8')
+
+    return render_template('weather.html',
+                           city=weather_data['name'],
+                           description=weather_data['description'],
+                           temp_now=weather_data['temp_now'],
+                           temp_max=weather_data['temp_max'],
+                           temp_min=weather_data['temp_min'],
+                           temp_feels_like=weather_data['temp_feels_like'],
+                           sunrise_time=weather_data['sunrise_time'],
+                           sunset_time=weather_data['sunset_time'],
+                           windspeed=weather_data['windspeed'],
+                           pressure=weather_data['pressure'],
+                           humidity=weather_data['humidity'],
+                           temp_score=weather_data['temp_score'],
+                           humidity_score=weather_data['humidity_score'],
+                           wind_score=weather_data['wind_score'],
+                           pressure_score=weather_data['pressure_score'],
+                           weather_score=weather_data['weather_score'],
+                           five_day_weather=five_day_weather,
+                           labels=hourly_forecast[0],
+                           temp_data=hourly_forecast[1],
+                           diagramm_url_1=img_base64_1,
+                           diagramm_url_2=img_base64_2)
     
     return render_template('weather.html',
                            city=weather_data['name'],
