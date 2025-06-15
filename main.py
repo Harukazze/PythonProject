@@ -238,6 +238,16 @@ def createQuantitativeCSV(cityName, countryCode):
 
     return os.path.join(app.config['DOWNLOAD_FOLDER'], f"{cityName}_{countryCode}_Quantitative.csv")
 
+def prepare_weather_data(cities, weather_conditions):
+    import pprint
+    pprint.pprint(f'Погодные условия: {weather_conditions}')
+
+    categories = list(weather_conditions.keys())
+    weather_counts = list(weather_conditions.values())
+
+    display_names = cities[0]
+
+    return display_names, categories, weather_counts
 
 @app.route('/', methods=["GET", "POST"])
 def index():
