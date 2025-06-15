@@ -154,17 +154,17 @@
         <p class="indexes" id="weather_score">Индекс качества погодных условий: <b>{{weather_score}}</b>
         <p class="indexes" id="weather_score_description"></p>
     </div>
-    <h1>Погода на сегодня</h1>
-    <img src="data:image/png;base64,{{ diagramm_url_1}}" alt="Погода">
-
-    <h1>Погода на сегодня</h1>
-    <img src="data:image/png;base64,{{ diagramm_url_2}}" alt="Погода">
     <!--    <p class="indexes" id="temp_score">Индекс температуры: {{temp_score}}</p>-->
     <!--    <p class="indexes" id="humidity_score">Индекс влажности: {{humidity_score}}</p>-->
     <!--    <p class="indexes" id="wind_score">Индекс скорости ветра: {{wind_score}}</p>-->
     <!--    <p class="indexes" id="pressure_score">Индекс давления: {{pressure_score}}</p>-->
 </div>
 <div class="divider"></div>
+<div class = "weather-container">
+    <img src="data:image/png;base64,{{ diagramm_url_1}}" alt="Погода" width="500" height="500">
+    <img src="data:image/png;base64,{{ diagramm_url_2}}" alt="Погода" width="600" height="500">
+</div>
+<div class = "divider"></div>
 <div class="weather-container">
     <h2>Скачать CSV отчёт</h2>
     <p>Выберите нужные столбцы, которые вы хотите оставить в отчёте</p>

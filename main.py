@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, Response
 import time
+import numpy as np
 import pandas as pd
 from urllib.parse import unquote
 from dotenv import load_dotenv
@@ -8,7 +9,7 @@ import os
 import matplotlib
 matplotlib.use('Agg') #Обязательно ДО pyplot
 import matplotlib.pyplot as plt
-import io
+from io import BytesIO
 import base64
 
 app = Flask(__name__)
@@ -254,7 +255,7 @@ def index():
     arguments = dict(request.args)
     # print(arguments)
     print(dict(request.form))
-    # print(request.form.getlist("CSVData"))
+    print(request.form.getlist("CSVData"))
     if len(arguments) == 0:
         weather_data = getWeather('Токио', 'JP')
         five_day_weather = fiveDaysWeather('Токио', 'JP')
@@ -274,12 +275,13 @@ def index():
                     return "Выберите столбцы, которые нужно оставить"
                 else:
                     city_rows = df[df['city'].isin(['Токио']) & df['country'].isin(['JP'])]
+                city_rows = city_rows[request.form.getlist("CSVData")]
                 city_rows.to_csv('uploads/Токио_JP_data.csv', encoding='utf-8', index=False)
                 file_path = os.path.join(app.config['DOWNLOAD_FOLDER'], f'Токио_JP_data.csv')
-
             else:
                 data = dict(request.form)["getCityData"]
                 city_rows = df[df['city'].isin([f'{data}']) & df['country'].isin([f'{arguments["countryCode"]}'])]
+                city_rows = city_rows[request.form.getlist("CSVData")]
                 city_rows.to_csv(f'uploads/{data}_{arguments['countryCode']}_data.csv', encoding='utf-8', index=False)
                 file_path = os.path.join(app.config['DOWNLOAD_FOLDER'], f'{data}_{arguments['countryCode']}_data.csv')
 
@@ -354,12 +356,13 @@ def index():
     x = np.arange(len(categories))  # Категории на оси X
     bar_width = 0.6
 
-    ax.bar(x, data_values, width=bar_width, color=['#1f77b4', '#ff7f0e', '#2ca02c'])
+    hbars = ax.bar(x, data_values, width=bar_width, color=['#1f77b4', '#ff7f0e', '#2ca02c'])
+    ax.bar_label(hbars)
 
     # Настройки
     ax.set_xlabel("Тип погоды")
     ax.set_ylabel("Количество дней")
-    ax.set_title(f"Погода в {display_names[0]}")
+    ax.set_title(f"Погода в {city}")
     ax.set_xticks(x)
     ax.set_xticklabels(categories, rotation=45)
     plt.tight_layout()
@@ -394,28 +397,6 @@ def index():
                            temp_data=hourly_forecast[1],
                            diagramm_url_1=img_base64_1,
                            diagramm_url_2=img_base64_2)
-    
-    return render_template('weather.html',
-                           city=weather_data['name'],
-                           description=weather_data['description'],
-                           temp_now=weather_data['temp_now'],
-                           temp_max=weather_data['temp_max'],
-                           temp_min=weather_data['temp_min'],
-                           temp_feels_like=weather_data['temp_feels_like'],
-                           sunrise_time=weather_data['sunrise_time'],
-                           sunset_time=weather_data['sunset_time'],
-                           windspeed=weather_data['windspeed'],
-                           pressure=weather_data['pressure'],
-                           humidity=weather_data['humidity'],
-                           temp_score=weather_data['temp_score'],
-                           humidity_score=weather_data['humidity_score'],
-                           wind_score=weather_data['wind_score'],
-                           pressure_score=weather_data['pressure_score'],
-                           weather_score=weather_data['weather_score'],
-                           five_day_weather=five_day_weather,
-                           labels=hourly_forecast[0],
-                           temp_data=hourly_forecast[1],
-                           diagramm_url=img_base64)
 
 
 @app.route("/find_city", methods=["POST"])
