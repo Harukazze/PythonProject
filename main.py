@@ -1,16 +1,20 @@
+from unicodedata import category
+
 from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, Response
 import time
-import numpy as np
 import pandas as pd
+import numpy as np
 from urllib.parse import unquote
 from dotenv import load_dotenv
 import requests
 import os
 import matplotlib
-matplotlib.use('Agg') #Обязательно ДО pyplot
+matplotlib.use('Agg')  # Обязательно ДО pyplot
 import matplotlib.pyplot as plt
 from io import BytesIO
 import base64
+from read_csv import read_csv_file
+from collections import defaultdict
 
 app = Flask(__name__)
 app.debug = True
@@ -239,23 +243,46 @@ def createQuantitativeCSV(cityName, countryCode):
 
     return os.path.join(app.config['DOWNLOAD_FOLDER'], f"{cityName}_{countryCode}_Quantitative.csv")
 
-def prepare_weather_data(cities, weather_conditions):
-    import pprint
-    pprint.pprint(f'Погодные условия: {weather_conditions}')
 
+def prepare_weather_data(cities, weather_conditions):
     categories = list(weather_conditions.keys())
     weather_counts = list(weather_conditions.values())
 
-    display_names = cities[0]
+    print('Бриз')
+    print(weather_counts)
+
+    display_names = cities
 
     return display_names, categories, weather_counts
+
+
+def prepare_boxplot_data(city="Токио"):
+    csv_data = read_csv_file('weather_data.csv')
+    weather_groups = defaultdict(list)
+
+    headers = csv_data[0]
+    city_index = headers.index('city')
+    desc_index = headers.index('description')
+    temp_index = headers.index('temp')
+
+    for row in csv_data[1:]:
+        if row[city_index] == city:
+            try:
+                weather_groups[row[desc_index]].append(float(row[temp_index]))
+            except (ValueError, IndexError):
+                continue
+
+    return weather_groups
+
+
+
 
 @app.route('/', methods=["GET", "POST"])
 def index():
     arguments = dict(request.args)
     # print(arguments)
     print(dict(request.form))
-    print(request.form.getlist("CSVData"))
+    # print(request.form.getlist("CSVData"))
     if len(arguments) == 0:
         weather_data = getWeather('Токио', 'JP')
         five_day_weather = fiveDaysWeather('Токио', 'JP')
@@ -275,15 +302,14 @@ def index():
                     return "Выберите столбцы, которые нужно оставить"
                 else:
                     city_rows = df[df['city'].isin(['Токио']) & df['country'].isin(['JP'])]
-                city_rows = city_rows[request.form.getlist("CSVData")]
                 city_rows.to_csv('uploads/Токио_JP_data.csv', encoding='utf-8', index=False)
                 file_path = os.path.join(app.config['DOWNLOAD_FOLDER'], f'Токио_JP_data.csv')
+
             else:
                 data = dict(request.form)["getCityData"]
                 city_rows = df[df['city'].isin([f'{data}']) & df['country'].isin([f'{arguments["countryCode"]}'])]
-                city_rows = city_rows[request.form.getlist("CSVData")]
-                city_rows.to_csv(f'uploads/{data}_{arguments['countryCode']}_data.csv', encoding='utf-8', index=False)
-                file_path = os.path.join(app.config['DOWNLOAD_FOLDER'], f'{data}_{arguments['countryCode']}_data.csv')
+                city_rows.to_csv(f"uploads/{data}_{arguments['countryCode']}_data.csv', encoding='utf-8", index=False)
+                file_path = os.path.join(app.config['DOWNLOAD_FOLDER'], f"{data}_{arguments['countryCode']}_data.csv")
 
             print(file_path)
             return send_file(file_path, mimetype='text/csv', as_attachment=True)
@@ -304,7 +330,7 @@ def index():
                 file_path = createQuantitativeCSV(data, arguments['countryCode'])
             print(file_path)
             return send_file(file_path, mimetype='text/csv', as_attachment=True)
-            
+
     # ДИАГРАММА 1
     # Данные
     categories = ['Минимальная', 'Средняя', 'Максимальная']
@@ -338,11 +364,13 @@ def index():
     else:
         city = weather_data['name']
         c_code = arguments['countryCode']
-    print(f"Данные для диаграммы 2 {city}, {c_code}")
+
+        print(city)
+        print(c_code)
+
     city_rows = df[df['city'].isin([f'{city}']) & df['country'].isin([f'{c_code}'])]
-    print(city_rows)
     value_counts = dict(city_rows['description'].value_counts())
-    print(value_counts)
+
     display_names, categories, data_values = prepare_weather_data([weather_data['name']], value_counts)
     '''
     display_names: Города
@@ -352,20 +380,17 @@ def index():
 
     data_values = [int(x) for x in data_values]
 
-    print(data_values)
-
     # Визуализация (вертикальный график)
     fig, ax = plt.subplots(figsize=(8, 6))
     x = np.arange(len(categories))  # Категории на оси X
     bar_width = 0.6
 
-    hbars = ax.bar(x, data_values, width=bar_width, color=['#1f77b4', '#ff7f0e', '#2ca02c'])
-    ax.bar_label(hbars)
+    ax.bar(x, data_values, width=bar_width, color=['#1f77b4', '#ff7f0e', '#2ca02c'])
 
     # Настройки
     ax.set_xlabel("Тип погоды")
     ax.set_ylabel("Количество дней")
-    ax.set_title(f"Погода в {city}")
+    ax.set_title(f"Погода в {display_names[0]}")
     ax.set_xticks(x)
     ax.set_xticklabels(categories, rotation=45)
     plt.tight_layout()
@@ -377,6 +402,47 @@ def index():
     plt.close()
 
     img_base64_2 = base64.b64encode(img.getvalue()).decode('utf-8')
+
+    # ДИАГРАММА 3 Усики
+    # Данные
+    weather_groups = prepare_boxplot_data(city)
+    plt.figure(figsize=(12, 6))
+
+    filtered_data = {k: v for k, v in weather_groups.items() if len(v) > 1}
+
+    if not filtered_data:
+        print("Недостаточно данных для построения boxplot (нужно хотя бы 2 значения для каждого типа погоды)")
+        return
+
+    labels = list(filtered_data.keys())
+    data = list(filtered_data.values())
+
+    box = plt.boxplot(
+        data,
+        labels=labels,
+        patch_artist=True,
+        showmeans=True,
+        meanprops={'marker': 'o', 'markerfacecolor': 'white', 'markeredgecolor': 'red'}
+    )
+
+    # Настройка цветов
+    colors = ['lightblue', 'lightgreen', 'pink', 'yellow', 'orange']
+    for patch, color in zip(box['boxes'], colors):
+        patch.set_facecolor(color)
+
+    plt.title(f'Распределение температуры по типам погоды в г. {city}')
+    plt.xticks(rotation=45, ha='right')
+    plt.ylabel('Температура (°C)')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+
+    # Сохранение
+    img = BytesIO()
+    plt.savefig(img, format="png", dpi=100, bbox_inches="tight")
+    img.seek(0)
+    plt.close()
+
+    img_base64_3 = base64.b64encode(img.getvalue()).decode('utf-8')
 
     return render_template('weather.html',
                            city=weather_data['name'],
@@ -399,7 +465,8 @@ def index():
                            labels=hourly_forecast[0],
                            temp_data=hourly_forecast[1],
                            diagramm_url_1=img_base64_1,
-                           diagramm_url_2=img_base64_2)
+                           diagramm_url_2=img_base64_2,
+                           diagramm_url_3=img_base64_3)
 
 
 @app.route("/find_city", methods=["POST"])
@@ -419,6 +486,7 @@ def findCity():
                                                                            'countryCode': i['country']}
 
     return jsonify(cities_dict)
+
 
 
 if "__main__" == __name__:
