@@ -336,12 +336,13 @@ def index():
         city = 'Токио'
         c_code = 'JP'
     else:
-        city = arguments['cityName']
+        city = weather_data['name']
         c_code = arguments['countryCode']
-
+    print(f"Данные для диаграммы 2 {city}, {c_code}")
     city_rows = df[df['city'].isin([f'{city}']) & df['country'].isin([f'{c_code}'])]
+    print(city_rows)
     value_counts = dict(city_rows['description'].value_counts())
-
+    print(value_counts)
     display_names, categories, data_values = prepare_weather_data([weather_data['name']], value_counts)
     '''
     display_names: Города
@@ -350,6 +351,8 @@ def index():
     '''
 
     data_values = [int(x) for x in data_values]
+
+    print(data_values)
 
     # Визуализация (вертикальный график)
     fig, ax = plt.subplots(figsize=(8, 6))
